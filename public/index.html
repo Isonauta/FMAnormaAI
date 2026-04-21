@@ -565,6 +565,48 @@
     .hero-title { font-size: 22px; }
     .mti-grid { grid-template-columns: 1fr; }
   }
+
+  /* MARKDOWN EN BURBUJAS MANNY */
+  .chat-bubble h1,.chat-bubble h2,.chat-bubble h3 {
+    font-family: 'DM Serif Display', serif;
+    color: var(--ink); margin: 10px 0 6px; line-height: 1.3;
+  }
+  .chat-bubble h1 { font-size: 16px; }
+  .chat-bubble h2 { font-size: 15px; }
+  .chat-bubble h3 { font-size: 14px; border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 8px; }
+  .chat-bubble strong { color: var(--ink); font-weight: 600; }
+  .chat-bubble em { font-style: italic; color: var(--ink-2); }
+  .chat-bubble ul, .chat-bubble ol { padding-left: 18px; margin: 8px 0; }
+  .chat-bubble li { margin-bottom: 4px; line-height: 1.5; }
+  .chat-bubble hr { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+  .chat-bubble code {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    background: #eeede9; padding: 1px 5px; border-radius: 3px;
+    color: var(--ink-2);
+  }
+  .chat-bubble table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 12px; }
+  .chat-bubble th {
+    background: #111110; color: white; padding: 6px 10px;
+    text-align: left; font-size: 10px; font-weight: 600;
+    font-family: 'DM Mono', monospace; letter-spacing: 0.5px;
+  }
+  .chat-bubble td { padding: 6px 10px; border-bottom: 1px solid var(--border); }
+  .chat-bubble tr:last-child td { border-bottom: none; }
+  .chat-bubble tr:nth-child(even) td { background: #f8f7f4; }
+  .chat-bubble .md-clause {
+    display: inline-block; font-family: 'DM Mono', monospace;
+    font-size: 10px; background: var(--gold-light); color: var(--gold-dark);
+    border: 1px solid var(--gold); border-radius: 4px;
+    padding: 1px 6px; margin: 0 2px;
+  }
+  .chat-bubble p { margin-bottom: 8px; }
+  .chat-bubble p:last-child { margin-bottom: 0; }
+  .manny-bubble-ai {
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    color: var(--ink-2) !important;
+    max-width: 90% !important;
+  }
 </style>
 </head>
 <body>
@@ -999,7 +1041,7 @@
         <div class="manny-messages" id="manny-messages">
           <div class="chat-msg ai">
             <div class="chat-avatar">✦</div>
-            <div class="chat-bubble">Hola, soy <strong>Manny</strong>. Soy tu asistente para el sistema FMA.<br><br>Puedo ayudarte a interpretar hallazgos, orientarte sobre cláusulas ISO, revisar el estado de las NCs o preparar argumentos para auditorías. ¿En qué trabajamos hoy?</div>
+            <div class="chat-bubble">Hola, soy <strong>Manny</strong> 👋<br><br>Tu asistente ISO en FMA Industrial. Puedo ayudarte con:<br><br><strong>· Análisis de NCs</strong> y acciones correctivas<br><strong>· Cláusulas ISO</strong> 9001, 14001, 45001<br><strong>· Preparación de auditorías</strong><br><strong>· Mejora continua</strong> y ciclo PHVA<br><br>¿Qué necesitas hoy?</div>
           </div>
         </div>
         <div class="manny-input-area">
@@ -1376,6 +1418,73 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
   // MANNY
   let mannyHistory = [];
 
+
+  function parseMarkdown(text) {
+    if (!text) return '';
+    let html = text
+      // Escapar HTML peligroso primero (excepto lo que ya venga como HTML)
+      // Headings
+      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+      .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+      // Bold e italic
+      .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      // HR
+      .replace(/^---+$/gm, '<hr>')
+      // Cláusulas ISO — highlight automático
+      .replace(/(cl[aá]usula\s+)?(\d+\.\d+[\.\d]*)/gi, (m, pre, clause) => {
+        if (clause && clause.match(/^\d+\.\d/)) return `${pre||''}<span class="md-clause">${clause}</span>`;
+        return m;
+      })
+      // Code inline
+      .replace(/`(.+?)`/g, '<code>$1</code>');
+
+    // Tablas Markdown
+    html = html.replace(/(\|.+\|
+)((?:\|[-:]+)+\|
+)((?:\|.+\|
+?)+)/g, (match, header, sep, body) => {
+      const heads = header.trim().split('|').filter(c => c.trim()).map(c => `<th>${c.trim()}</th>`).join('');
+      const rows = body.trim().split('
+').filter(r => r.trim()).map(r => {
+        const cells = r.trim().split('|').filter(c => c !== undefined && r.includes('|')).slice(1,-1).map(c => `<td>${c.trim()}</td>`).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+      return `<table><thead><tr>${heads}</tr></thead><tbody>${rows}</tbody></table>`;
+    });
+
+    // Listas
+    html = html.replace(/(^[-*] .+$
+?)+/gm, block => {
+      const items = block.trim().split('
+').map(l => `<li>${l.replace(/^[-*] /, '')}</li>`).join('');
+      return `<ul>${items}</ul>`;
+    });
+    html = html.replace(/(^\d+\. .+$
+?)+/gm, block => {
+      const items = block.trim().split('
+').map(l => `<li>${l.replace(/^\d+\. /, '')}</li>`).join('');
+      return `<ol>${items}</ol>`;
+    });
+
+    // Párrafos: líneas normales separadas por doble salto
+    html = html.split(/
+
++/).map(block => {
+      block = block.trim();
+      if (!block) return '';
+      if (block.match(/^<(h[123]|ul|ol|table|hr)/)) return block;
+      // Saltos de línea simples
+      block = block.replace(/
+/g, '<br>');
+      return `<p>${block}</p>`;
+    }).join('');
+
+    return html;
+  }
+
   async function sendManny() {
     const input = document.getElementById('manny-input');
     const text = input.value.trim(); if (!text) return;
@@ -1396,8 +1505,9 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
       const data = await response.json();
       document.getElementById(typId)?.remove();
       const aiDiv = document.createElement('div'); aiDiv.className = 'chat-msg ai';
-      const reply = data.respuesta || data.mensaje || 'Lo siento, no pude procesar esa consulta.';
-      aiDiv.innerHTML = `<div class="chat-avatar">✦</div><div class="chat-bubble">${reply}</div>`;
+      const rawReply = data.respuesta || data.mensaje || 'Lo siento, no pude procesar esa consulta.';
+      const reply = parseMarkdown(rawReply);
+      aiDiv.innerHTML = `<div class="chat-avatar">✦</div><div class="chat-bubble manny-bubble-ai">${reply}</div>`;
       msgs.appendChild(aiDiv); msgs.scrollTop = msgs.scrollHeight;
       mannyHistory.push({ role:'assistant', content:reply });
     } catch(e) {
