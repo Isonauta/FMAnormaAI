@@ -1097,6 +1097,9 @@
     if (ci) ci.addEventListener('keydown', e => { if (e.key === 'Enter') sendUserMessage(); });
     const mi = document.getElementById('manny-input');
     if (mi) mi.addEventListener('keydown', e => { if (e.key === 'Enter') sendManny(); });
+    if (typeof cargarMTI === 'function') cargarMTI();
+    if (typeof cargarHeroVideo === 'function') cargarHeroVideo();
+    if (typeof cargarNoticias === 'function') cargarNoticias();
   });
 
   const fmas = {
@@ -1417,6 +1420,247 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
 
 
 
+  // ── MANNY TE INFORMA (MTI) ─────────────────────────────
+  let mtiItems = [];
+  let mtiType = 'noticia';
+
+  function selectMTIType(type, el) {
+    mtiType = type;
+    document.querySelectorAll('.type-opt').forEach(function(o) { o.classList.remove('selected'); });
+    el.classList.add('selected');
+    document.getElementById('mti-field-img').style.display = type === 'noticia' ? 'block' : 'none';
+    document.getElementById('mti-field-yt').style.display = type === 'video' ? 'block' : 'none';
+    document.getElementById('mti-field-audio').style.display = type === 'podcast' ? 'block' : 'none';
+  }
+
+  function cargarMTI() {
+    var saved = localStorage.getItem('fma_mti');
+    mtiItems = saved ? JSON.parse(saved) : [
+      { id: 'm1', tipo: 'noticia', titulo: 'Auditoría interna Q1 2026 — Resultados', fecha: '2026-04-15', texto: 'Se completó exitosamente la auditoría interna del primer trimestre. Se identificaron 2 NCs menores en el área de producción, actualmente en análisis.', img: '', yt: '', audio: '' },
+      { id: 'm2', tipo: 'noticia', titulo: 'Capacitación 5 Porqués — Equipos de Calidad', fecha: '2026-04-08', texto: 'Jornada de capacitación en metodología de análisis de causa raíz. Participaron 18 personas de producción, mantención y calidad.', img: '', yt: '', audio: '' }
+    ];
+    renderMTI();
+  }
+
+  function guardarMTIStorage() {
+    localStorage.setItem('fma_mti', JSON.stringify(mtiItems));
+    var count = document.getElementById('noticias-count');
+    if (count) {
+      if (mtiItems.length > 0) { count.textContent = mtiItems.length; count.style.display = 'inline'; }
+      else count.style.display = 'none';
+    }
+  }
+
+  function getYTEmbed(url) {
+    if (!url) return '';
+    var id = '';
+    var m1 = url.match(/[?&]v=([^&]+)/);
+    var m2 = url.match(/youtu\.be\/([^?]+)/);
+    var m3 = url.match(/embed\/([^?]+)/);
+    if (m1) id = m1[1]; else if (m2) id = m2[1]; else if (m3) id = m3[1];
+    return id ? 'https://www.youtube.com/embed/' + id + '?rel=0' : '';
+  }
+
+  function renderMTI() {
+    var grid = document.getElementById('mti-grid');
+    if (!grid) return;
+    if (mtiItems.length === 0) {
+      grid.innerHTML = '<div style="text-align:center;padding:48px;color:var(--ink-3);grid-column:1/-1;font-size:13px;opacity:0.6"><div style="font-size:32px;margin-bottom:10px">📰</div>No hay publicaciones aún.</div>';
+      guardarMTIStorage(); return;
+    }
+    var sorted = mtiItems.slice().sort(function(a,b) { return new Date(b.fecha) - new Date(a.fecha); });
+    var html = '';
+    sorted.forEach(function(item) {
+      var fecha = new Date(item.fecha + 'T12:00:00').toLocaleDateString('es-CL', { year:'numeric', month:'long', day:'numeric' });
+      var badgeLabel = { noticia:'Noticia', video:'Video', podcast:'Podcast' }[item.tipo] || 'Noticia';
+      var badgeClass = { noticia:'badge-noticia', video:'badge-video', podcast:'badge-podcast' }[item.tipo] || 'badge-noticia';
+      var mediaHTML = '';
+      if (item.tipo === 'video' && item.yt) {
+        var embed = getYTEmbed(item.yt);
+        mediaHTML = embed ? '<iframe src="' + embed + '" allowfullscreen></iframe>' : '<div class="media-placeholder"><div class="big-icon">▶️</div></div>';
+      } else if (item.tipo === 'podcast' && item.audio) {
+        mediaHTML = '<div class="media-placeholder" style="background:#111110"><div class="big-icon">🎙️</div></div>';
+      } else if (item.img) {
+        mediaHTML = '<img src="' + item.img + '" alt="' + item.titulo + '" />';
+      } else {
+        var icons = { noticia:'📰', video:'▶️', podcast:'🎙️' };
+        mediaHTML = '<div class="media-placeholder"><div class="big-icon">' + (icons[item.tipo]||'📰') + '</div></div>';
+      }
+      var audioPlayer = (item.tipo === 'podcast' && item.audio) ? '<div class="audio-player"><audio controls src="' + item.audio + '" style="flex:1;height:32px"></audio></div>' : '';
+      var adminBtns = isAdmin ? '<div class="mti-card-footer"><button class="btn-edit-noticia" onclick="editarMTI(\'' + item.id + '\')">✏️ Editar</button><button class="btn-del-noticia" onclick="eliminarMTI(\'' + item.id + '\')">🗑️</button></div>' : '';
+      html += '<div class="mti-card"><div class="mti-card-media">' + mediaHTML + '<span class="mti-type-badge ' + badgeClass + '">' + badgeLabel + '</span></div>' + audioPlayer + '<div class="mti-card-body"><div class="mti-card-date">' + fecha + '</div><div class="mti-card-title">' + item.titulo + '</div>' + (item.texto ? '<div class="mti-card-text">' + item.texto + '</div>' : '') + adminBtns + '</div></div>';
+    });
+    grid.innerHTML = html;
+    guardarMTIStorage();
+  }
+
+  function abrirModalMTI(id) {
+    id = id || null;
+    document.getElementById('modal-mti-titulo').textContent = id ? 'Editar publicación' : 'Nueva publicación';
+    document.getElementById('mti-edit-id').value = id || '';
+    document.getElementById('mti-titulo').value = '';
+    document.getElementById('mti-fecha').value = new Date().toISOString().split('T')[0];
+    document.getElementById('mti-texto').value = '';
+    document.getElementById('mti-img-url').value = '';
+    document.getElementById('mti-yt-url').value = '';
+    document.getElementById('mti-audio-url').value = '';
+    selectMTIType('noticia', document.querySelector('.type-opt[data-type="noticia"]'));
+    if (id) {
+      var item = mtiItems.find(function(x) { return x.id === id; });
+      if (item) {
+        document.getElementById('mti-titulo').value = item.titulo;
+        document.getElementById('mti-fecha').value = item.fecha;
+        document.getElementById('mti-texto').value = item.texto || '';
+        document.getElementById('mti-img-url').value = item.img || '';
+        document.getElementById('mti-yt-url').value = item.yt || '';
+        document.getElementById('mti-audio-url').value = item.audio || '';
+        var el = document.querySelector('.type-opt[data-type="' + item.tipo + '"]');
+        if (el) selectMTIType(item.tipo, el);
+      }
+    }
+    document.getElementById('modal-mti').style.display = 'flex';
+  }
+
+  function cerrarModalMTI(e) {
+    if (e && e.target !== document.getElementById('modal-mti')) return;
+    document.getElementById('modal-mti').style.display = 'none';
+  }
+
+  function guardarMTI() {
+    var titulo = document.getElementById('mti-titulo').value.trim();
+    var fecha = document.getElementById('mti-fecha').value;
+    if (!titulo || !fecha) { showToast('Completa título y fecha', false); return; }
+    var texto = document.getElementById('mti-texto').value.trim();
+    var img = document.getElementById('mti-img-url').value.trim();
+    var yt = document.getElementById('mti-yt-url').value.trim();
+    var audio = document.getElementById('mti-audio-url').value.trim();
+    var editId = document.getElementById('mti-edit-id').value;
+    var item = { tipo: mtiType, titulo: titulo, fecha: fecha, texto: texto, img: img, yt: yt, audio: audio };
+    if (editId) {
+      var idx = mtiItems.findIndex(function(x) { return x.id === editId; });
+      if (idx >= 0) mtiItems[idx] = Object.assign(mtiItems[idx], item);
+      showToast('Publicación actualizada', true);
+    } else {
+      item.id = 'm' + Date.now();
+      mtiItems.unshift(item);
+      showToast('Publicado ✦', true);
+    }
+    document.getElementById('modal-mti').style.display = 'none';
+    renderMTI();
+  }
+
+  function editarMTI(id) { abrirModalMTI(id); }
+
+  function eliminarMTI(id) {
+    if (!confirm('¿Eliminar esta publicación?')) return;
+    mtiItems = mtiItems.filter(function(x) { return x.id !== id; });
+    renderMTI();
+    showToast('Eliminado', false);
+  }
+
+  function cargarHeroVideo() {
+    var saved = localStorage.getItem('fma_hero_video');
+    if (saved) actualizarHeroVideo(saved);
+  }
+
+  function editarVideoHero() {
+    if (!isAdmin) return;
+    var saved = localStorage.getItem('fma_hero_video') || '';
+    document.getElementById('hero-yt-url').value = saved;
+    document.getElementById('modal-hero-video').style.display = 'flex';
+  }
+
+  function cerrarModalHeroVideo(e) {
+    if (e && e.target !== document.getElementById('modal-hero-video')) return;
+    document.getElementById('modal-hero-video').style.display = 'none';
+  }
+
+  function guardarVideoHero() {
+    var url = document.getElementById('hero-yt-url').value.trim();
+    localStorage.setItem('fma_hero_video', url);
+    actualizarHeroVideo(url);
+    document.getElementById('modal-hero-video').style.display = 'none';
+    showToast('Video actualizado', true);
+  }
+
+  function actualizarHeroVideo(url) {
+    var embed = getYTEmbed(url);
+    var wrap = document.getElementById('hero-video-wrap');
+    if (!wrap) return;
+    if (embed) {
+      wrap.innerHTML = '<iframe src="' + embed + '?autoplay=0&rel=0" allowfullscreen style="width:100%;height:100%;min-height:220px;border:none"></iframe>';
+    }
+  }
+
+
+function parseMarkdown(text) {
+  if (!text) return text;
+  var lines = text.split('\n');
+  var out = [];
+  var inUl = false, inOl = false;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var trimmed = line.trim();
+    // Headings
+    if (trimmed.slice(0,4) === '### ') {
+      if (inUl) { out.push('</ul>'); inUl = false; }
+      if (inOl) { out.push('</ol>'); inOl = false; }
+      out.push('<h3>' + trimmed.slice(4) + '</h3>');
+    } else if (trimmed.slice(0,3) === '## ') {
+      if (inUl) { out.push('</ul>'); inUl = false; }
+      if (inOl) { out.push('</ol>'); inOl = false; }
+      out.push('<h2>' + trimmed.slice(3) + '</h2>');
+    } else if (trimmed.slice(0,2) === '# ') {
+      if (inUl) { out.push('</ul>'); inUl = false; }
+      if (inOl) { out.push('</ol>'); inOl = false; }
+      out.push('<h1>' + trimmed.slice(2) + '</h1>');
+    // HR
+    } else if (trimmed === '---' || trimmed === '----' || trimmed === '-----') {
+      if (inUl) { out.push('</ul>'); inUl = false; }
+      if (inOl) { out.push('</ol>'); inOl = false; }
+      out.push('<hr>');
+    // Unordered list
+    } else if (trimmed.slice(0,2) === '- ' || trimmed.slice(0,2) === '* ') {
+      if (inOl) { out.push('</ol>'); inOl = false; }
+      if (!inUl) { out.push('<ul>'); inUl = true; }
+      out.push('<li>' + inlineMd(trimmed.slice(2)) + '</li>');
+    // Ordered list
+    } else if (/^\d+\. /.test(trimmed)) {
+      if (inUl) { out.push('</ul>'); inUl = false; }
+      if (!inOl) { out.push('<ol>'); inOl = true; }
+      out.push('<li>' + inlineMd(trimmed.replace(/^\d+\. /, '')) + '</li>');
+    // Empty line
+    } else if (trimmed === '') {
+      if (inUl) { out.push('</ul>'); inUl = false; }
+      if (inOl) { out.push('</ol>'); inOl = false; }
+      out.push('<br>');
+    // Normal line
+    } else {
+      if (inUl) { out.push('</ul>'); inUl = false; }
+      if (inOl) { out.push('</ol>'); inOl = false; }
+      out.push('<p>' + inlineMd(trimmed) + '</p>');
+    }
+  }
+  if (inUl) out.push('</ul>');
+  if (inOl) out.push('</ol>');
+  return out.join('');
+}
+
+function inlineMd(text) {
+  var t = text;
+  // Bold+italic
+  t = t.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
+  // Bold
+  t = t.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  // Italic
+  t = t.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+  // Code
+  t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
+  return t;
+}
+</script>
+</body>
+</html>
   // ── MANNY CHAT ──────────────────────────────────────────
   let mannyHistory = [];
 
@@ -1465,7 +1709,3 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
   }
 
 
-  function parseMarkdown(text) { return text ? text.replace(/\n/g, "<br>") : text; }
-</script>
-</body>
-</html>
