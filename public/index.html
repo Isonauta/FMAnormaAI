@@ -1421,103 +1421,53 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
 
   function parseMarkdown(text) {
     if (!text) return '';
-    let html = text
-      // Escapar HTML peligroso primero (excepto lo que ya venga como HTML)
-      // Headings
-      .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-      .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-      .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-      // Bold e italic
-      .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      // HR
-      .replace(/^---+$/gm, '<hr>')
-      // Cláusulas ISO — highlight automático
-      .replace(/(cl[aá]usula\s+)?(\d+\.\d+[\.\d]*)/gi, (m, pre, clause) => {
-        if (clause && clause.match(/^\d+\.\d/)) return `${pre||''}<span class="md-clause">${clause}</span>`;
-        return m;
-      })
-      // Code inline
-      .replace(/`(.+?)`/g, '<code>$1</code>');
+    let html = text;
 
-    // Tablas Markdown
-    html = html.replace(/(\|.+\|
-)((?:\|[-:]+)+\|
-)((?:\|.+\|
-?)+)/g, (match, header, sep, body) => {
-      const heads = header.trim().split('|').filter(c => c.trim()).map(c => `<th>${c.trim()}</th>`).join('');
-      const rows = body.trim().split('
-').filter(r => r.trim()).map(r => {
-        const cells = r.trim().split('|').filter(c => c !== undefined && r.includes('|')).slice(1,-1).map(c => `<td>${c.trim()}</td>`).join('');
-        return `<tr>${cells}</tr>`;
+    // Headings
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+
+    // Bold e italic
+    html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*([^*]+?)\*/g, '<em>$1</em>');
+
+    // HR
+    html = html.replace(/^---+$/gm, '<hr>');
+
+    // Code inline
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // Listas no ordenadas
+    html = html.replace(/((?:^[-*] .+$\n?)+)/gm, function(block) {
+      const items = block.trim().split('\n').map(function(l) {
+        return '<li>' + l.replace(/^[-*] /, '') + '</li>';
       }).join('');
-      return `<table><thead><tr>${heads}</tr></thead><tbody>${rows}</tbody></table>`;
+      return '<ul>' + items + '</ul>';
     });
 
-    // Listas
-    html = html.replace(/(^[-*] .+$
-?)+/gm, block => {
-      const items = block.trim().split('
-').map(l => `<li>${l.replace(/^[-*] /, '')}</li>`).join('');
-      return `<ul>${items}</ul>`;
-    });
-    html = html.replace(/(^\d+\. .+$
-?)+/gm, block => {
-      const items = block.trim().split('
-').map(l => `<li>${l.replace(/^\d+\. /, '')}</li>`).join('');
-      return `<ol>${items}</ol>`;
+    // Listas ordenadas
+    html = html.replace(/((?:^\d+\. .+$\n?)+)/gm, function(block) {
+      const items = block.trim().split('\n').map(function(l) {
+        return '<li>' + l.replace(/^\d+\. /, '') + '</li>';
+      }).join('');
+      return '<ol>' + items + '</ol>';
     });
 
-    // Párrafos: líneas normales separadas por doble salto
-    html = html.split(/
+    // Saltos de línea simples → <br>
+    html = html.replace(/\n/g, '<br>');
 
-+/).map(block => {
-      block = block.trim();
-      if (!block) return '';
-      if (block.match(/^<(h[123]|ul|ol|table|hr)/)) return block;
-      // Saltos de línea simples
-      block = block.replace(/
-/g, '<br>');
-      return `<p>${block}</p>`;
-    }).join('');
+    // Limpiar <br> dentro de listas y headings
+    html = html.replace(/<\/h([123])><br>/g, '<\/h$1>');
+    html = html.replace(/<\/li><br>/g, '<\/li>');
+    html = html.replace(/<\/ul><br>/g, '<\/ul>');
+    html = html.replace(/<\/ol><br>/g, '<\/ol>');
+    html = html.replace(/<hr><br>/g, '<hr>');
 
     return html;
   }
 
-  async function sendManny() {
-    const input = document.getElementById('manny-input');
-    const text = input.value.trim(); if (!text) return;
-    input.value = '';
-    const msgs = document.getElementById('manny-messages');
-    const userDiv = document.createElement('div'); userDiv.className = 'chat-msg user';
-    userDiv.innerHTML = `<div class="chat-avatar">tú</div><div class="chat-bubble">${text}</div>`;
-    msgs.appendChild(userDiv); msgs.scrollTop = msgs.scrollHeight;
-    mannyHistory.push({ role:'user', content:text });
-    const btn = document.getElementById('manny-send-btn');
-    btn.disabled = true; btn.textContent = '...';
-    const typId = 'manny-typing-' + Date.now();
-    const typDiv = document.createElement('div'); typDiv.className = 'chat-msg ai typing-row'; typDiv.id = typId;
-    typDiv.innerHTML = '<div class="chat-avatar">✦</div><div class="typing-dots"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
-    msgs.appendChild(typDiv); msgs.scrollTop = msgs.scrollHeight;
-    try {
-      const response = await fetch('/api/manny', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ message: text, history: mannyHistory.slice(-8) }) });
-      const data = await response.json();
-      document.getElementById(typId)?.remove();
-      const aiDiv = document.createElement('div'); aiDiv.className = 'chat-msg ai';
-      const rawReply = data.respuesta || data.mensaje || 'Lo siento, no pude procesar esa consulta.';
-      const reply = parseMarkdown(rawReply);
-      aiDiv.innerHTML = `<div class="chat-avatar">✦</div><div class="chat-bubble manny-bubble-ai">${reply}</div>`;
-      msgs.appendChild(aiDiv); msgs.scrollTop = msgs.scrollHeight;
-      mannyHistory.push({ role:'assistant', content:reply });
-    } catch(e) {
-      document.getElementById(typId)?.remove();
-      const errDiv = document.createElement('div'); errDiv.className = 'chat-msg ai';
-      errDiv.innerHTML = `<div class="chat-avatar">✦</div><div class="chat-bubble">Error de conexión con el servidor. Verifica que /api/manny esté disponible.</div>`;
-      msgs.appendChild(errDiv); msgs.scrollTop = msgs.scrollHeight;
-    }
-    btn.disabled = false; btn.textContent = 'Enviar →';
-  }
 
   function exportPDF() {
     const nc = fmas[currentFMA]; const fd = nc.finalData||{};
