@@ -1078,6 +1078,28 @@
 <div class="toast" id="toast"></div>
 
 <script>
+
+  // ── VARIABLES GLOBALES ──────────────────────────────────
+  var isAdmin = false;
+  var ADMIN_PWD = 'FMAadmin2026';
+
+  function checkAdminPwd() {
+    var val = document.getElementById('admin-pwd-input').value;
+    if (val === ADMIN_PWD) {
+      isAdmin = true;
+      document.getElementById('admin-gate-noticias').style.display = 'none';
+      var btnMti = document.getElementById('btn-nueva-mti');
+      if (btnMti) btnMti.style.display = 'inline-flex';
+      var heroEdit = document.getElementById('hero-video-edit-btn');
+      if (heroEdit) heroEdit.style.display = 'block';
+      showToast('Acceso admin activado ✦', true);
+      renderMTI();
+    } else {
+      showToast('Clave incorrecta', false);
+      document.getElementById('admin-pwd-input').value = '';
+    }
+  }
+
   function checkPassword() {
     const val = document.getElementById('gate-input').value;
     if (val === 'FMA2026SIG') {
@@ -1658,10 +1680,8 @@ function inlineMd(text) {
   t = t.replace(/`([^`]+)`/g, '<code>$1</code>');
   return t;
 }
-</script>
-</body>
-</html>
-  // ── MANNY CHAT ──────────────────────────────────────────
+
+// ── MANNY CHAT ──────────────────────────────────────────
   let mannyHistory = [];
 
   async function sendManny() {
@@ -1708,4 +1728,6 @@ function inlineMd(text) {
     btn.disabled = false; btn.textContent = 'Enviar →';
   }
 
-
+</script>
+</body>
+</html>
