@@ -1920,6 +1920,71 @@ ${fd.cambios_sgc?`<div class="section"><div class="section-title">⑦ Cambios al
     t.className = 'toast show'+(ok?' toast-green':'');
     setTimeout(()=>t.className='toast', 2800);
   }
+
+  // ── MANNY CHAT ─────────────────────────────────────────
+  let mannyHistory = [];
+
+  async function sendManny() {
+    const input = document.getElementById('manny-input');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+
+    const msgs = document.getElementById('manny-messages');
+    const userDiv = document.createElement('div');
+    userDiv.className = 'chat-msg user';
+    userDiv.innerHTML = '<div class="chat-avatar">tú</div><div class="chat-bubble">' + text + '</div>';
+    msgs.appendChild(userDiv);
+    msgs.scrollTop = msgs.scrollHeight;
+
+    mannyHistory.push({ role: 'user', content: text });
+
+    const btn = document.getElementById('manny-send-btn');
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    const typId = 'manny-typing-' + Date.now();
+    const typDiv = document.createElement('div');
+    typDiv.className = 'chat-msg ai typing-row';
+    typDiv.id = typId;
+    typDiv.innerHTML = '<div class="chat-avatar">✦</div><div class="typing-dots"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+    msgs.appendChild(typDiv);
+    msgs.scrollTop = msgs.scrollHeight;
+
+    try {
+      const response = await fetch('/api/manny', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: text, history: mannyHistory.slice(-8) })
+      });
+      const data = await response.json();
+      const typEl = document.getElementById(typId);
+      if (typEl) typEl.remove();
+
+      const rawReply = data.respuesta || data.mensaje || 'Lo siento, no pude procesar esa consulta.';
+      const reply = typeof parseMarkdown === 'function' ? parseMarkdown(rawReply) : rawReply;
+
+      const aiDiv = document.createElement('div');
+      aiDiv.className = 'chat-msg ai';
+      aiDiv.innerHTML = '<div class="chat-avatar">✦</div><div class="chat-bubble manny-bubble-ai">' + reply + '</div>';
+      msgs.appendChild(aiDiv);
+      msgs.scrollTop = msgs.scrollHeight;
+      mannyHistory.push({ role: 'assistant', content: rawReply });
+
+    } catch(e) {
+      const typEl = document.getElementById(typId);
+      if (typEl) typEl.remove();
+      const errDiv = document.createElement('div');
+      errDiv.className = 'chat-msg ai';
+      errDiv.innerHTML = '<div class="chat-avatar">✦</div><div class="chat-bubble">Error de conexión con el servidor.</div>';
+      msgs.appendChild(errDiv);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Enviar →';
+  }
+
 </script>
 </body>
 </html>
