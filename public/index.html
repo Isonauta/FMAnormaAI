@@ -1420,52 +1420,58 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
 
 
   function parseMarkdown(text) {
-    if (!text) return '';
-    let html = text;
-
+    if (!text) return text;
+    let h = text;
     // Headings
-    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-
-    // Bold e italic
-    html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*([^*]+?)\*/g, '<em>$1</em>');
-
+    h = h.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    h = h.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    h = h.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    // Bold
+    h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    // Italic
+    h = h.replace(/\*([^*
+]+)\*/g, '<em>$1</em>');
     // HR
-    html = html.replace(/^---+$/gm, '<hr>');
-
-    // Code inline
-    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-    // Listas no ordenadas
-    html = html.replace(/((?:^[-*] .+$\n?)+)/gm, function(block) {
-      const items = block.trim().split('\n').map(function(l) {
-        return '<li>' + l.replace(/^[-*] /, '') + '</li>';
-      }).join('');
-      return '<ul>' + items + '</ul>';
-    });
-
-    // Listas ordenadas
-    html = html.replace(/((?:^\d+\. .+$\n?)+)/gm, function(block) {
-      const items = block.trim().split('\n').map(function(l) {
-        return '<li>' + l.replace(/^\d+\. /, '') + '</li>';
-      }).join('');
-      return '<ol>' + items + '</ol>';
-    });
-
-    // Saltos de línea simples → <br>
-    html = html.replace(/\n/g, '<br>');
-
-    // Limpiar <br> dentro de listas y headings
-    html = html.replace(/<\/h([123])><br>/g, '<\/h$1>');
-    html = html.replace(/<\/li><br>/g, '<\/li>');
-    html = html.replace(/<\/ul><br>/g, '<\/ul>');
-    html = html.replace(/<\/ol><br>/g, '<\/ol>');
-    html = html.replace(/<hr><br>/g, '<hr>');
-
-    return html;
+    h = h.replace(/^---+$/gm, '<hr>');
+    // Listas - procesar línea por línea
+    let lines = h.split('
+');
+    let result = [];
+    let inUl = false, inOl = false;
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+      let ulMatch = line.match(/^[-*] (.+)$/);
+      let olMatch = line.match(/^\d+\. (.+)$/);
+      if (ulMatch) {
+        if (!inUl) { result.push('<ul>'); inUl = true; }
+        if (inOl) { result.push('</ol>'); inOl = false; }
+        result.push('<li>' + ulMatch[1] + '</li>');
+      } else if (olMatch) {
+        if (!inOl) { result.push('<ol>'); inOl = true; }
+        if (inUl) { result.push('</ul>'); inUl = false; }
+        result.push('<li>' + olMatch[1] + '</li>');
+      } else {
+        if (inUl) { result.push('</ul>'); inUl = false; }
+        if (inOl) { result.push('</ol>'); inOl = false; }
+        result.push(line);
+      }
+    }
+    if (inUl) result.push('</ul>');
+    if (inOl) result.push('</ol>');
+    h = result.join('
+');
+    // Saltos de línea
+    h = h.replace(/
+/g, '<br>');
+    // Limpiar br innecesarios
+    h = h.replace(/<\/h([123])><br>/g, '<\/h$1>');
+    h = h.replace(/<\/li><br>/g, '<\/li>');
+    h = h.replace(/<\/ul><br>/g, '<\/ul>');
+    h = h.replace(/<\/ol><br>/g, '<\/ol>');
+    h = h.replace(/<ul><br>/g, '<ul>');
+    h = h.replace(/<ol><br>/g, '<ol>');
+    h = h.replace(/<hr><br>/g, '<hr>');
+    return h;
   }
 
 
