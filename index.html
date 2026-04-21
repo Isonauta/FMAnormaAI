@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NormaAI FMA · Gestión de Faltas, Medidas y Acciones</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f5f3;
+    --bg-2: #ffffff;
+    --bg-3: #eeede9;
+    --surface: #ffffff;
+    --surface-2: #f8f7f4;
+    --border: #e2e0db;
+    --border-strong: #c8c5bc;
+    --ink: #1a1816;
+    --ink-2: #3d3a34;
+    --ink-3: #8a8680;
+    --gold: #e8a900;
+    --gold-light: #fff8e1;
+    --gold-glow: rgba(232,169,0,0.2);
+    --gold-dark: #c48c00;
+    --gold-pale: #ffed6f;
+    --warn: #c05a00;
+    --warn-light: #fff3e0;
+    --warn-border: #ffcc80;
+    --success: #2e7d52;
+    --success-light: #e8f5e9;
+    --success-border: #a5d6a7;
+    --danger: #c0392b;
+    --danger-light: #fdecea;
+    --danger-border: #f5a49d;
+    --tag-open: #fdecea;
+    --tag-open-text: #b71c1c;
+    --tag-analysis: #fff8e1;
+    --tag-analysis-text: #c48c00;
+    --tag-plan: #fff3e0;
+    --tag-plan-text: #c05a00;
+    --tag-closed: #e8f5e9;
+    --tag-closed-text: #2e7d52;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--ink); font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.5; min-height: 100vh; }
+
+  /* PASSWORD GATE */
+  #password-gate { position: fixed; inset: 0; background: #111110; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+  .gate-box { background: #141210; border: 1px solid rgba(212,175,55,0.2); border-radius: 16px; padding: 44px 52px; width: 380px; text-align: center; box-shadow: 0 0 60px rgba(212,175,55,0.05), 0 24px 60px rgba(0,0,0,0.6); }
+  .gate-brand { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--gold); letter-spacing: -0.5px; margin-bottom: 4px; }
+  .gate-brand span { color: var(--ink-2); font-size: 16px; font-family: 'DM Mono', monospace; display: block; letter-spacing: 3px; text-transform: uppercase; margin-top: 4px; }
+  .gate-sub { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink-3); margin-bottom: 32px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .gate-input { width: 100%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 13px 16px; font-family: 'DM Mono', monospace; font-size: 13px; color: var(--ink); outline: none; text-align: center; letter-spacing: 2px; margin-bottom: 12px; transition: border-color 0.2s; }
+  .gate-input:focus { border-color: var(--gold); }
+  .gate-input::placeholder { color: var(--ink-3); letter-spacing: 1px; }
+  .gate-btn { width: 100%; padding: 13px; background: var(--gold); color: #0a0908; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.15s; margin-bottom: 10px; }
+  .gate-btn:hover { background: var(--gold-pale); }
+  .gate-error { font-size: 11px; color: #e07060; font-family: 'DM Mono', monospace; display: none; margin-top: 8px; }
+  .gate-footer { margin-top: 24px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px; color: var(--ink-3); text-transform: uppercase; }
+  #app { display: none; }
+
+  /* TOPBAR */
+  .topbar { background: #111110; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 54px; position: sticky; top: 0; z-index: 100; border-bottom: 3px solid var(--gold); }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand-name { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--gold); letter-spacing: -0.3px; }
+  .brand-sub { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.45); margin-top: 1px; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .norma-badge { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1.5px; padding: 4px 10px; background: var(--gold-light); border: 1px solid var(--border-strong); border-radius: 4px; color: var(--gold); }
+  .demo-badge { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1.5px; padding: 4px 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: rgba(255,255,255,0.5); }
+
+  /* LAYOUT */
+  .layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 54px); }
+  .sidebar { background: #ffffff; border-right: 1px solid var(--border); padding: 24px 0; }
+  .sidebar-section { padding: 0 16px; margin-bottom: 24px; }
+  .sidebar-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink-3); padding: 0 8px; margin-bottom: 6px; }
+  .nav-item { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 6px; cursor: pointer; color: var(--ink-2); font-size: 13px; transition: all 0.15s; border: none; background: none; width: 100%; text-align: left; }
+  .nav-item:hover { background: var(--gold-light); color: var(--ink); }
+  .nav-item.active { background: var(--gold-light); color: var(--gold); font-weight: 500; border: 1px solid var(--border); }
+  .nav-icon { font-size: 14px; opacity: 0.7; }
+  .nav-count { margin-left: auto; font-family: 'DM Mono', monospace; font-size: 10px; background: var(--tag-open); color: var(--tag-open-text); padding: 1px 6px; border-radius: 99px; }
+  .nav-count.gold { background: var(--gold-light); color: var(--gold); border: 1px solid var(--border); }
+  .main { padding: 28px 32px; overflow-y: auto; }
+  .view { display: none; }
+  .view.active { display: block; animation: fadeUp 0.25s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* PAGE HEADER */
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+  .page-title { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--ink); letter-spacing: -0.5px; margin-bottom: 3px; }
+  .page-sub { color: var(--ink-3); font-size: 13px; }
+
+  /* STATS */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+  .stat-card.gold-accent { border-color: var(--border-strong); background: linear-gradient(135deg, var(--surface) 0%, rgba(212,175,55,0.05) 100%); }
+  .stat-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+  .stat-value { font-family: 'DM Serif Display', serif; font-size: 28px; color: var(--ink); line-height: 1; margin-bottom: 4px; }
+  .stat-delta { font-size: 11px; color: var(--ink-3); }
+  .stat-delta.up { color: var(--tag-open-text); }
+  .stat-delta.down { color: var(--success); }
+
+  /* TABLE */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .table-toolbar { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface-2); }
+  .table-title { font-weight: 500; font-size: 13px; color: var(--ink); }
+  .btn-primary { padding: 7px 14px; background: var(--gold); color: #0a0908; border: none; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+  .btn-primary:hover { background: var(--gold-pale); }
+  .btn-ghost { padding: 7px 14px; background: transparent; color: var(--ink-2); border: 1px solid var(--border); border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; transition: all 0.15s; }
+  .btn-ghost:hover { background: var(--gold-light); border-color: var(--border-strong); color: var(--gold); }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 10px 18px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-3); background: #eeede9; border-bottom: 1px solid var(--border); font-weight: 400; }
+  td { padding: 13px 18px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; color: var(--ink-2); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--gold-light); cursor: pointer; }
+  .fma-code { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gold); }
+  .fma-desc { max-width: 280px; color: var(--ink); font-size: 13px; }
+  .status-tag { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 99px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+  .tag-open { background: var(--tag-open); color: var(--tag-open-text); }
+  .tag-analysis { background: var(--tag-analysis); color: var(--tag-analysis-text); }
+  .tag-plan { background: var(--tag-plan); color: var(--tag-plan-text); }
+  .tag-closed { background: var(--tag-closed); color: var(--tag-closed-text); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .priority-tag { font-family: 'DM Mono', monospace; font-size: 10px; padding: 2px 7px; border-radius: 4px; }
+  .p-alta { background: var(--danger-light); color: #e07060; border: 1px solid var(--danger-border); }
+  .p-media { background: var(--warn-light); color: #e09030; border: 1px solid var(--warn-border); }
+  .p-baja { background: var(--success-light); color: var(--success); border: 1px solid var(--success-border); }
+  .action-link { color: var(--gold); font-size: 12px; cursor: pointer; text-decoration: none; font-weight: 500; }
+  .action-link:hover { text-decoration: underline; }
+  .clause-tag { display: inline-block; font-family: 'DM Mono', monospace; font-size: 10px; padding: 2px 8px; background: var(--gold-light); color: var(--gold); border: 1px solid var(--border-strong); border-radius: 4px; margin-right: 4px; margin-bottom: 4px; }
+
+  /* DETAIL */
+  .detail-grid { display: grid; grid-template-columns: 1fr 300px; gap: 20px; align-items: start; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+  .card-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--surface-2); }
+  .card-title { font-weight: 500; font-size: 13px; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+  .card-body { padding: 20px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-3); }
+  .field-value { font-size: 13px; color: var(--ink-2); }
+  .field-textarea { background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink); width: 100%; resize: none; outline: none; transition: border-color 0.15s; line-height: 1.5; }
+  .field-textarea:focus { border-color: var(--gold); }
+  .field-textarea::placeholder { color: var(--ink-3); }
+  .field-input { background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink); width: 100%; outline: none; transition: border-color 0.15s; }
+  .field-input:focus { border-color: var(--gold); }
+  .field-select { background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px; padding: 8px 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink); width: 100%; outline: none; cursor: pointer; }
+  .field-select option { background: var(--bg-2); color: var(--ink); }
+
+  /* AI PANEL */
+  .ai-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+  .ai-header { padding: 16px 20px; background: #1a1816; display: flex; align-items: center; gap: 12px; border-bottom: 2px solid var(--gold); }
+  .ai-header-icon { width: 36px; height: 36px; border-radius: 8px; background: var(--gold-light); border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .ai-title { font-size: 12px; font-weight: 500; color: var(--ink); }
+  .ai-sub { font-size: 10px; color: var(--ink-3); margin-top: 1px; }
+  .chat-messages { display: flex; flex-direction: column; gap: 12px; padding: 20px; min-height: 320px; max-height: 480px; overflow-y: auto; background: #f8f7f4; }
+  .chat-msg { display: flex; gap: 8px; animation: fadeUp 0.3s ease; }
+  .chat-msg.user { flex-direction: row-reverse; }
+  .chat-avatar { width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-family: 'DM Mono', monospace; font-weight: 500; margin-top: 2px; }
+  .chat-msg.ai .chat-avatar { background: var(--gold); color: #0a0908; }
+  .chat-msg.user .chat-avatar { background: #e2e0db; color: var(--ink-2); font-size: 9px; border: 1px solid var(--border); }
+  .chat-bubble { max-width: 85%; padding: 11px 14px; border-radius: 10px; font-size: 13px; line-height: 1.55; }
+  .chat-msg.ai .chat-bubble { background: var(--surface); border: 1px solid var(--border); color: var(--ink-2); border-top-left-radius: 2px; }
+  .chat-msg.user .chat-bubble { background: var(--gold-light); border: 1px solid var(--gold-pale); color: var(--ink); border-top-right-radius: 2px; }
+  .why-badge { display: inline-block; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px; padding: 2px 7px; background: var(--gold-light); color: var(--gold); border: 1px solid var(--border-strong); border-radius: 4px; margin-bottom: 6px; }
+  .quick-replies { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 20px 14px; background: #f8f7f4; }
+  .qr-btn { padding: 7px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--ink-2); cursor: pointer; transition: all 0.15s; line-height: 1.4; }
+  .qr-btn:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-light); }
+  .chat-input-area { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; background: var(--bg-2); }
+  .chat-text-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 9px 12px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink); outline: none; transition: border-color 0.15s; height: 38px; }
+  .chat-text-input:focus { border-color: var(--gold); }
+  .chat-text-input::placeholder { color: var(--ink-3); }
+  .chat-send-btn { width: 38px; height: 38px; background: var(--gold); border: none; border-radius: 6px; color: #0a0908; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; transition: background 0.15s; flex-shrink: 0; font-weight: 700; }
+  .chat-send-btn:hover { background: var(--gold-pale); }
+  .chat-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .progress-5why { display: flex; gap: 4px; padding: 10px 20px; border-bottom: 1px solid var(--border); align-items: center; background: var(--bg-2); }
+  .why-step { flex: 1; height: 4px; background: var(--border); border-radius: 99px; transition: background 0.4s; }
+  .why-step.done { background: var(--success); }
+  .why-step.active { background: var(--gold); }
+  .why-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px; color: var(--ink-3); margin-left: 8px; white-space: nowrap; }
+  .ai-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; background: var(--bg-2); }
+  .btn-analyze { flex: 1; padding: 11px; background: var(--gold); color: #0a0908; border: none; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn-analyze:hover { background: var(--gold-pale); }
+  .btn-analyze:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* 3P */
+  .tres-p-panel { margin: 0 0 16px; border: 1px solid var(--border-strong); border-radius: 10px; overflow: hidden; animation: fadeUp 0.3s ease; }
+  .tres-p-header { padding: 12px 16px; background: #1a1816; border-bottom: 2px solid var(--gold); }
+  .tres-p-title { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
+  .tres-p-sub { font-size: 11px; color: var(--ink-3); margin-top: 3px; }
+  .p-block { border-bottom: 1px solid var(--border); padding: 14px 16px; background: var(--surface); }
+  .p-block:last-child { border-bottom: none; }
+  .p-block-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+  .p-icon { width: 22px; height: 22px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+  .p-icon.proceso { background: var(--gold-light); color: var(--gold); }
+  .p-icon.persona { background: var(--warn-light); color: var(--warn); }
+  .p-icon.procedimiento { background: var(--success-light); color: var(--success); }
+  .p-block-title.proceso { color: var(--gold); }
+  .p-block-title.persona { color: #e09030; }
+  .p-block-title.procedimiento { color: var(--success); }
+  .accion-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--border); background: #f8f7f4; margin-bottom: 8px; transition: all 0.15s; cursor: pointer; }
+  .accion-row:hover { border-color: var(--gold-dark); }
+  .accion-row.selected { border-color: var(--gold); background: var(--gold-light); }
+  .accion-check { width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid var(--border-strong); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #0a0908; transition: all 0.15s; margin-top: 1px; }
+  .accion-row.selected .accion-check { background: var(--gold); border-color: var(--gold); }
+  .accion-content { flex: 1; }
+  .accion-text { font-size: 12px; color: var(--ink-2); line-height: 1.5; transition: color 0.15s; }
+  .accion-row.selected .accion-text { color: var(--gold); }
+  .accion-meta-row { display: none; gap: 8px; margin-top: 10px; }
+  .accion-row.selected .accion-meta-row { display: flex; flex-wrap: wrap; }
+  .accion-field { flex: 1; min-width: 120px; }
+  .accion-field-label { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-3); margin-bottom: 4px; }
+  .accion-field-input { width: 100%; background: #ffffff; border: 1px solid var(--border); border-radius: 5px; padding: 5px 8px; font-family: 'DM Sans', sans-serif; font-size: 11px; color: var(--ink); outline: none; transition: border-color 0.15s; }
+  .accion-field-input:focus { border-color: var(--gold); }
+  .tres-p-footer { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; background: var(--bg-2); }
+  .btn-confirm-3p { flex: 1; padding: 10px; background: var(--gold); color: #0a0908; border: none; border-radius: 6px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+  .btn-confirm-3p:hover { background: var(--gold-pale); }
+
+  /* FINAL RESULT */
+  .final-result-card { margin: 14px 0; padding: 14px; background: var(--success-light); border: 1px solid var(--success-border); border-radius: 8px; animation: fadeUp 0.3s ease; }
+  .final-causa { font-size: 13px; color: var(--ink-2); line-height: 1.5; margin-bottom: 10px; padding: 9px 11px; background: var(--bg-2); border-radius: 6px; border-left: 3px solid var(--success); }
+  .accion-mini { font-size: 12px; color: var(--ink-2); padding: 7px 11px; background: var(--bg-2); border-radius: 6px; margin-bottom: 5px; display: flex; align-items: flex-start; gap: 8px; border: 1px solid var(--border); }
+  .accion-mini-num { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--gold); font-weight: 500; flex-shrink: 0; margin-top: 1px; }
+  .btn-pdf { width: 100%; margin-top: 10px; padding: 10px; background: transparent; border: 1px solid var(--border-strong); border-radius: 6px; color: var(--gold); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn-pdf:hover { background: var(--gold-light); }
+
+  /* TYPING */
+  .typing-row { display: flex; gap: 8px; padding: 4px 0; animation: fadeUp 0.2s ease; }
+  .typing-dots { display: flex; gap: 3px; align-items: center; padding: 11px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; border-top-left-radius: 2px; }
+  .td { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); animation: tdBounce 1.2s infinite; }
+  .td:nth-child(2) { animation-delay: 0.2s; }
+  .td:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes tdBounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.3; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+  /* SIDEBAR RIGHT */
+  .right-sidebar { position: sticky; top: 72px; }
+  .timeline { position: relative; padding-left: 20px; }
+  .timeline::before { content: ''; position: absolute; left: 6px; top: 6px; bottom: 0; width: 1px; background: var(--border); }
+  .tl-item { position: relative; margin-bottom: 16px; padding-left: 16px; }
+  .tl-dot { position: absolute; left: -20px; top: 4px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface); }
+  .tl-dot.active { border-color: var(--gold); background: var(--gold); }
+  .tl-dot.done { border-color: var(--success); background: var(--success); }
+  .tl-label { font-size: 12px; font-weight: 500; color: var(--ink); margin-bottom: 2px; }
+  .tl-meta { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--ink-3); }
+
+  /* FORM */
+  .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; max-width: 640px; }
+  .form-header { padding: 20px 24px; border-bottom: 1px solid var(--border); background: var(--surface-2); }
+  .form-title { font-family: 'DM Serif Display', serif; font-size: 18px; margin-bottom: 4px; color: var(--ink); }
+  .form-sub { color: var(--ink-3); font-size: 12px; }
+  .form-body { padding: 24px; }
+  .form-group { margin-bottom: 18px; }
+  .form-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px; display: block; }
+  .form-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; background: var(--surface-2); }
+  .back-btn { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-3); font-size: 12px; cursor: pointer; margin-bottom: 20px; background: none; border: none; padding: 0; transition: color 0.15s; }
+  .back-btn:hover { color: var(--gold); }
+
+  /* MANNY */
+  .manny-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; max-width: 800px; }
+  .manny-header { padding: 20px 24px; background: #1a1816; border-bottom: 2px solid var(--gold); display: flex; align-items: center; gap: 14px; }
+  .manny-avatar { width: 44px; height: 44px; border-radius: 10px; background: var(--gold-light); border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .manny-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--gold); letter-spacing: -0.3px; }
+  .manny-sub { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+  .manny-status { margin-left: auto; display: flex; align-items: center; gap: 6px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px; color: var(--success); text-transform: uppercase; }
+  .manny-status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .manny-messages { display: flex; flex-direction: column; gap: 12px; padding: 20px; min-height: 400px; max-height: 520px; overflow-y: auto; background: #f8f7f4; }
+  .manny-input-area { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; background: var(--bg-2); }
+  .manny-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 11px 14px; font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink); outline: none; transition: border-color 0.15s; }
+  .manny-input:focus { border-color: var(--gold); }
+  .manny-input::placeholder { color: var(--ink-3); }
+  .manny-send { padding: 11px 20px; background: var(--gold); color: #0a0908; border: none; border-radius: 8px; font-weight: 700; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: background 0.15s; }
+  .manny-send:hover { background: var(--gold-pale); }
+  .manny-send:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 80px 40px; color: var(--ink-3); }
+  .empty-icon { font-size: 40px; margin-bottom: 16px; opacity: 0.3; }
+  .empty-title { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--ink-2); margin-bottom: 8px; }
+  .empty-sub { font-size: 13px; color: var(--ink-3); }
+
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); color: var(--ink); padding: 12px 18px; border: 1px solid var(--border-strong); border-radius: 8px; font-size: 13px; display: none; animation: fadeUp 0.3s ease; z-index: 999; max-width: 280px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+  .toast.show { display: block; }
+  .toast-green { border-color: var(--success-border); color: var(--success); }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .main { padding: 16px; padding-bottom: 72px; }
+    .topbar { padding: 0 16px; height: 48px; }
+    .norma-badge { display: none; }
+    .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-card { padding: 12px 14px; }
+    .stat-value { font-size: 22px; }
+    .page-header { flex-direction: column; gap: 12px; }
+    .page-header .btn-primary { width: 100%; text-align: center; }
+    .table-wrap { overflow-x: auto; }
+    table { min-width: 520px; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .right-sidebar { position: static; }
+    .chat-messages { min-height: 240px; max-height: 340px; padding: 14px; }
+    .mobile-nav { display: flex !important; position: fixed; bottom: 0; left: 0; right: 0; background: #ffffff; border-top: 1px solid var(--border); z-index: 50; height: 56px; }
+  }
+  .mobile-nav { display: none; }
+  .mobile-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: none; background: none; cursor: pointer; color: var(--ink-3); font-size: 9px; font-family: 'DM Sans', sans-serif; letter-spacing: 0.3px; transition: color 0.15s; padding: 8px 4px; }
+  .mobile-nav-item.active { color: var(--gold); }
+  .mobile-nav-item .mn-icon { font-size: 18px; line-height: 1; }
+</style>
+</head>
+<body>
+
+<!-- PASSWORD GATE -->
+<div id="password-gate">
+  <div class="gate-box">
+    <div class="gate-brand">NormaAI <span>FMA</span></div>
+    <div class="gate-sub">Faltas · Medidas · Acciones · Demo</div>
+    <input class="gate-input" type="password" id="gate-input" placeholder="Clave de acceso" />
+    <button class="gate-btn" onclick="checkPassword()">Acceder →</button>
+    <div class="gate-error" id="gate-error">Clave incorrecta. Intenta nuevamente.</div>
+    <div class="gate-footer">Procesus · Isonauta · 2026</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+<div class="topbar">
+  <div class="brand">
+    <div>
+      <div class="brand-name">NormaAI <span style="color:var(--ink-3);font-size:14px;font-family:'DM Mono',monospace;letter-spacing:2px">FMA</span></div>
+      <div class="brand-sub">Faltas · Medidas · Acciones</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="norma-badge">ISO 9001 · 14001 · 45001</span>
+    <span class="demo-badge">DEMO</span>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Principal</div>
+      <button class="nav-item active" onclick="showView('dashboard', this)"><span class="nav-icon">▦</span> Dashboard</button>
+      <button class="nav-item" onclick="showView('lista', this)"><span class="nav-icon">≡</span> No Conformidades<span class="nav-count">3</span></button>
+      <button class="nav-item" onclick="showView('documentos', this)"><span class="nav-icon">📄</span> Documentos</button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Asistencia IA</div>
+      <button class="nav-item" onclick="showView('manny', this)"><span class="nav-icon">✦</span> Manny<span class="nav-count gold">IA</span></button>
+      <button class="nav-item" onclick="showView('gestor', this)"><span class="nav-icon">⚙</span> Gestor</button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Acciones</div>
+      <button class="nav-item" onclick="showView('nueva', this)"><span class="nav-icon">+</span> Nueva NC</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="view active" id="view-dashboard">
+      <div class="page-header">
+        <div><div class="page-title">Dashboard</div><div class="page-sub">Resumen del sistema FMA · Abril 2026</div></div>
+        <button class="btn-primary" onclick="showView('nueva', document.querySelector('.nav-item'))">+ Nueva NC</button>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Total NCs</div><div class="stat-value">3</div><div class="stat-delta up">↑ 1 este mes</div></div>
+        <div class="stat-card"><div class="stat-label">Abiertas</div><div class="stat-value" style="color:var(--tag-open-text)">1</div><div class="stat-delta">Requieren acción</div></div>
+        <div class="stat-card gold-accent"><div class="stat-label">En análisis IA</div><div class="stat-value" style="color:var(--gold)">1</div><div class="stat-delta">Pendiente plan</div></div>
+        <div class="stat-card"><div class="stat-label">Cerradas</div><div class="stat-value" style="color:var(--success)">1</div><div class="stat-delta down">↓ Tiempo prom. 18d</div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-toolbar"><span class="table-title">No Conformidades recientes</span><button class="btn-ghost" onclick="showView('lista', document.querySelector('.nav-item'))">Ver todas →</button></div>
+        <table><thead><tr><th>Código</th><th>Descripción</th><th>Cláusula</th><th>Estado</th><th>Prioridad</th><th></th></tr></thead>
+        <tbody>
+          <tr onclick="openDetail('FMA-2026-003')"><td class="fma-code">FMA-2026-003</td><td class="fma-desc">Registros de calibración sin actualizar por más de 6 meses</td><td><span class="clause-tag">7.1.5</span></td><td><span class="status-tag tag-open"><span class="dot"></span>Abierta</span></td><td><span class="priority-tag p-alta">Alta</span></td><td><a class="action-link">Analizar →</a></td></tr>
+          <tr onclick="openDetail('FMA-2026-002')"><td class="fma-code">FMA-2026-002</td><td class="fma-desc">Procedimiento de control de documentos desactualizado</td><td><span class="clause-tag">7.5</span></td><td><span class="status-tag tag-analysis"><span class="dot"></span>En análisis</span></td><td><span class="priority-tag p-media">Media</span></td><td><a class="action-link">Ver →</a></td></tr>
+          <tr onclick="openDetail('FMA-2026-001')"><td class="fma-code">FMA-2026-001</td><td class="fma-desc">Encuesta de satisfacción de clientes no ejecutada en Q4 2025</td><td><span class="clause-tag">9.1.2</span></td><td><span class="status-tag tag-closed"><span class="dot"></span>Cerrada</span></td><td><span class="priority-tag p-baja">Baja</span></td><td><a class="action-link">Ver →</a></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- LISTA -->
+    <div class="view" id="view-lista">
+      <div class="page-header">
+        <div><div class="page-title">No Conformidades</div><div class="page-sub">Sistema FMA · 3 registros</div></div>
+        <button class="btn-primary" onclick="showView('nueva', document.querySelector('.nav-item'))">+ Nueva NC</button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Código</th><th>Descripción</th><th>Cláusula</th><th>Responsable</th><th>Estado</th><th>Prioridad</th><th></th></tr></thead>
+        <tbody>
+          <tr onclick="openDetail('FMA-2026-003')"><td class="fma-code">FMA-2026-003</td><td class="fma-desc">Registros de calibración sin actualizar por más de 6 meses</td><td><span class="clause-tag">7.1.5</span></td><td>J. Fernández</td><td><span class="status-tag tag-open"><span class="dot"></span>Abierta</span></td><td><span class="priority-tag p-alta">Alta</span></td><td><a class="action-link">Analizar →</a></td></tr>
+          <tr onclick="openDetail('FMA-2026-002')"><td class="fma-code">FMA-2026-002</td><td class="fma-desc">Procedimiento de control de documentos desactualizado</td><td><span class="clause-tag">7.5</span></td><td>M. González</td><td><span class="status-tag tag-analysis"><span class="dot"></span>En análisis</span></td><td><span class="priority-tag p-media">Media</span></td><td><a class="action-link">Ver →</a></td></tr>
+          <tr onclick="openDetail('FMA-2026-001')"><td class="fma-code">FMA-2026-001</td><td class="fma-desc">Encuesta de satisfacción de clientes no ejecutada en Q4 2025</td><td><span class="clause-tag">9.1.2</span></td><td>A. Morales</td><td><span class="status-tag tag-closed"><span class="dot"></span>Cerrada</span></td><td><span class="priority-tag p-baja">Baja</span></td><td><a class="action-link">Ver →</a></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- DETAIL -->
+    <div class="view" id="view-detail">
+      <button class="back-btn" onclick="showView('lista', document.querySelectorAll('.nav-item')[1])">← Volver a lista</button>
+      <div class="page-header">
+        <div><div class="page-title" id="detail-title">FMA-2026-003</div><div class="page-sub" id="detail-sub">Registros de calibración sin actualizar · Cláusula 7.1.5</div></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="status-tag tag-open" id="detail-status"><span class="dot"></span>Abierta</span>
+          <span class="priority-tag p-alta" id="detail-priority">Alta</span>
+        </div>
+      </div>
+      <div class="detail-grid">
+        <div>
+          <div class="ai-panel">
+            <div class="ai-header">
+              <div class="ai-header-icon">✦</div>
+              <div>
+                <div class="ai-title">Análisis de Causa Raíz · 5 Porqués</div>
+                <div class="ai-sub">Cláusula 10.2 · Sistema FMA</div>
+              </div>
+            </div>
+            <div class="progress-5why" id="progress-5why" style="display:none">
+              <div class="why-step" id="ws1"></div>
+              <div class="why-step" id="ws2"></div>
+              <div class="why-step" id="ws3"></div>
+              <div class="why-step" id="ws4"></div>
+              <div class="why-step" id="ws5"></div>
+              <span class="why-label" id="why-label">5 Porqués</span>
+            </div>
+            <div class="chat-messages" id="chat-messages">
+              <div style="text-align:center;padding:48px 20px;color:var(--ink-3)">
+                <div style="font-size:28px;margin-bottom:12px;opacity:0.3">✦</div>
+                <div style="font-size:13px;font-style:italic">Presiona <strong style="color:var(--ink-2)">Iniciar análisis</strong> para guiarte por el flujo completo de acción correctiva según cláusula 10.2.</div>
+              </div>
+            </div>
+            <div class="quick-replies" id="quick-replies" style="display:none"></div>
+            <div class="chat-input-area" id="chat-input-area" style="display:none">
+              <input class="chat-text-input" id="chat-text" placeholder="Escribe tu respuesta..." />
+              <button class="chat-send-btn" onclick="sendUserMessage()">→</button>
+            </div>
+            <div class="ai-footer" id="ai-footer">
+              <button class="btn-analyze" id="btn-analyze" onclick="startAnalysis()">✦ Iniciar análisis · Cláusula 10.2</button>
+            </div>
+            <div id="pdf-footer" style="display:none;padding:0 16px 16px">
+              <button class="btn-pdf" onclick="exportPDF()">↓ Descargar Plan de Acción PDF</button>
+            </div>
+          </div>
+          <div class="tres-p-panel" id="tres-p-panel" style="display:none">
+            <div class="tres-p-header">
+              <div class="tres-p-title">④ Acciones Correctivas · Modelo 3P</div>
+              <div class="tres-p-sub">Selecciona las acciones que aplicarás · Asigna fecha y responsable</div>
+            </div>
+            <div id="p-bloques"></div>
+            <div class="tres-p-footer">
+              <button class="btn-confirm-3p" onclick="confirmar3P()">Confirmar acciones y continuar →</button>
+            </div>
+          </div>
+        </div>
+        <div class="right-sidebar">
+          <div class="card">
+            <div class="card-header"><div class="card-title">📋 Datos de la NC</div></div>
+            <div class="card-body">
+              <div class="field-row">
+                <div class="field"><div class="field-label">Código</div><div class="field-value" id="d-code" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--gold)">FMA-2026-003</div></div>
+                <div class="field"><div class="field-label">Cláusula</div><div class="field-value"><span class="clause-tag" id="d-clause">7.1.5</span></div></div>
+                <div class="field"><div class="field-label">Responsable</div><div class="field-value" id="d-resp">J. Fernández</div></div>
+                <div class="field"><div class="field-label">Fecha</div><div class="field-value" id="d-date">03/04/2026</div></div>
+              </div>
+              <div class="field">
+                <div class="field-label" style="margin-bottom:6px">Hallazgo</div>
+                <div id="d-desc" style="background:var(--bg-2);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:12px;color:var(--ink-2);line-height:1.6"></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">⟳ Flujo de la NC</div></div>
+            <div class="card-body">
+              <div class="timeline">
+                <div class="tl-item"><div class="tl-dot done"></div><div class="tl-label">NC Registrada</div><div class="tl-meta" id="tl-reg-meta">Pendiente</div></div>
+                <div class="tl-item"><div class="tl-dot active" id="tl-analysis-dot"></div><div class="tl-label">Análisis IA</div><div class="tl-meta" id="tl-analysis-meta">Pendiente</div></div>
+                <div class="tl-item"><div class="tl-dot" id="tl-plan-dot"></div><div class="tl-label">Plan de acción</div><div class="tl-meta" id="tl-plan-meta">Esperando análisis</div></div>
+                <div class="tl-item"><div class="tl-dot"></div><div class="tl-label">Verificación</div><div class="tl-meta">Pendiente</div></div>
+                <div class="tl-item"><div class="tl-dot"></div><div class="tl-label">Cierre</div><div class="tl-meta">Pendiente</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NUEVA NC -->
+    <div class="view" id="view-nueva">
+      <button class="back-btn" onclick="showView('lista', document.querySelectorAll('.nav-item')[1])">← Volver a lista</button>
+      <div class="form-card">
+        <div class="form-header"><div class="form-title">Registrar No Conformidad</div><div class="form-sub">Sistema FMA · Los campos marcados son obligatorios</div></div>
+        <div class="form-body">
+          <div class="form-group"><label class="form-label">Descripción del hallazgo *</label><textarea class="field-textarea" rows="4" id="new-desc" placeholder="Describe con precisión qué se encontró, dónde y cuándo..."></textarea></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+            <div class="form-group"><label class="form-label">Cláusula ISO *</label>
+              <select class="field-select" id="new-clause">
+                <option value="">Seleccionar cláusula...</option>
+                <optgroup label="4 · Contexto"><option>4.1 · Comprensión del contexto</option><option>4.2 · Partes interesadas</option><option>4.3 · Alcance del SGC</option><option>4.4 · Procesos del SGC</option></optgroup>
+                <optgroup label="5 · Liderazgo"><option>5.1.1 · Liderazgo y compromiso</option><option>5.1.2 · Enfoque al cliente</option><option>5.3 · Roles y responsabilidades</option></optgroup>
+                <optgroup label="6 · Planificación"><option>6.1 · Riesgos y oportunidades</option><option>6.2 · Objetivos de calidad</option><option>6.3 · Planificación de cambios</option></optgroup>
+                <optgroup label="7 · Apoyo"><option>7.1.1 · Recursos</option><option>7.1.3 · Infraestructura</option><option>7.1.5 · Recursos de seguimiento y medición</option><option>7.2 · Competencia</option><option>7.3 · Toma de conciencia</option><option>7.4 · Comunicación</option><option>7.5.1 · Información documentada</option><option>7.5.3 · Control de información documentada</option></optgroup>
+                <optgroup label="8 · Operación"><option>8.1 · Planificación operacional</option><option>8.4 · Control de procesos externos</option><option>8.5.1 · Control de producción</option><option>8.6 · Liberación de productos</option><option>8.7 · Salidas no conformes</option></optgroup>
+                <optgroup label="9 · Evaluación"><option>9.1.1 · Seguimiento y medición</option><option>9.1.2 · Satisfacción del cliente</option><option>9.2 · Auditoría interna</option><option>9.3 · Revisión por la dirección</option></optgroup>
+                <optgroup label="10 · Mejora"><option>10.1 · Generalidades</option><option>10.2 · No conformidad y acción correctiva</option><option>10.3 · Mejora continua</option></optgroup>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Prioridad *</label><select class="field-select" id="new-priority"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>
+            <div class="form-group"><label class="form-label">Responsable *</label><input class="field-input" type="text" id="new-resp" placeholder="Nombre del responsable" /></div>
+            <div class="form-group"><label class="form-label">Fecha límite</label><input class="field-input" type="date" id="new-date" /></div>
+          </div>
+          <div class="form-group"><label class="form-label">Evidencia / observación adicional</label><textarea class="field-textarea" rows="2" placeholder="Documentos, fotos, registros relacionados..."></textarea></div>
+        </div>
+        <div class="form-footer">
+          <button class="btn-ghost" onclick="showView('lista', document.querySelectorAll('.nav-item')[1])">Cancelar</button>
+          <button class="btn-primary" onclick="saveNC()">Registrar y analizar con IA →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DOCUMENTOS -->
+    <div class="view" id="view-documentos">
+      <div class="page-header">
+        <div><div class="page-title">Documentos</div><div class="page-sub">Gestión documental del sistema FMA</div></div>
+        <button class="btn-primary">+ Nuevo documento</button>
+      </div>
+      <div class="empty-state">
+        <div class="empty-icon">📄</div>
+        <div class="empty-title">Repositorio documental</div>
+        <div class="empty-sub">Los documentos vinculados a las NC aparecerán aquí.<br>Conecta con Supabase normaai-fma para activar.</div>
+      </div>
+    </div>
+
+    <!-- MANNY -->
+    <div class="view" id="view-manny">
+      <div class="page-header">
+        <div><div class="page-title">Manny</div><div class="page-sub">Asistente conversacional del sistema FMA</div></div>
+      </div>
+      <div class="manny-panel">
+        <div class="manny-header">
+          <div class="manny-avatar">✦</div>
+          <div>
+            <div class="manny-title">Manny</div>
+            <div class="manny-sub">Asistente IA · Sistema NormaAI FMA · ISO 9001/14001/45001</div>
+          </div>
+          <div class="manny-status"><div class="manny-status-dot"></div>En línea</div>
+        </div>
+        <div class="manny-messages" id="manny-messages">
+          <div class="chat-msg ai">
+            <div class="chat-avatar">✦</div>
+            <div class="chat-bubble">Hola, soy <strong>Manny</strong>. Soy tu asistente para el sistema FMA.<br><br>Puedo ayudarte a interpretar hallazgos, orientarte sobre cláusulas ISO, revisar el estado de las NCs o preparar argumentos para auditorías. ¿En qué trabajamos hoy?</div>
+          </div>
+        </div>
+        <div class="manny-input-area">
+          <input class="manny-input" id="manny-input" placeholder="Escríbele a Manny..." />
+          <button class="manny-send" id="manny-send-btn" onclick="sendManny()">Enviar →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- GESTOR -->
+    <div class="view" id="view-gestor">
+      <div class="page-header">
+        <div><div class="page-title">Gestor</div><div class="page-sub">Configuración y administración del sistema FMA</div></div>
+      </div>
+      <div class="empty-state">
+        <div class="empty-icon">⚙</div>
+        <div class="empty-title">Gestor del sistema</div>
+        <div class="empty-sub">Administración de usuarios, normas, configuración de Supabase<br>y parámetros del sistema FMA.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- MOBILE NAV -->
+<div class="mobile-nav" id="mobile-nav">
+  <button class="mobile-nav-item active" onclick="mobileNav('dashboard', this)"><span class="mn-icon">▦</span>Dashboard</button>
+  <button class="mobile-nav-item" onclick="mobileNav('lista', this)"><span class="mn-icon">≡</span>NCs</button>
+  <button class="mobile-nav-item" onclick="mobileNav('manny', this)"><span class="mn-icon">✦</span>Manny</button>
+  <button class="mobile-nav-item" onclick="mobileNav('nueva', this)"><span class="mn-icon">+</span>Nueva</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  function checkPassword() {
+    const val = document.getElementById('gate-input').value;
+    if (val === 'NormaAIFMA2026**') {
+      document.getElementById('password-gate').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+    } else {
+      const err = document.getElementById('gate-error');
+      err.style.display = 'block';
+      document.getElementById('gate-input').style.borderColor = '#e07060';
+      setTimeout(() => { err.style.display = 'none'; document.getElementById('gate-input').style.borderColor = 'rgba(212,175,55,0.2)'; }, 2500);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('gate-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPassword(); });
+    const ci = document.getElementById('chat-text');
+    if (ci) ci.addEventListener('keydown', e => { if (e.key === 'Enter') sendUserMessage(); });
+    const mi = document.getElementById('manny-input');
+    if (mi) mi.addEventListener('keydown', e => { if (e.key === 'Enter') sendManny(); });
+  });
+
+  const fmas = {
+    'FMA-2026-003': { title:'FMA-2026-003', sub:'Registros de calibración sin actualizar · Cláusula 7.1.5', clause:'7.1.5', resp:'J. Fernández', date:'03/04/2026', priority:'Alta', priorityClass:'p-alta', status:'Abierta', statusClass:'tag-open', desc:'Los registros de calibración de los equipos de medición del área de producción no han sido actualizados en los últimos 6 meses. Se detectaron 4 equipos con certificados vencidos. Esto compromete la trazabilidad metrológica requerida por la norma.', analyzed:false },
+    'FMA-2026-002': { title:'FMA-2026-002', sub:'Procedimiento de control de documentos desactualizado · Cláusula 7.5', clause:'7.5', resp:'M. González', date:'15/03/2026', priority:'Media', priorityClass:'p-media', status:'En análisis', statusClass:'tag-analysis', desc:'El procedimiento PR-002 "Control de Información Documentada" se encuentra en versión 2019. No ha sido revisado ni actualizado conforme al ciclo de revisión anual establecido en el SGC.', analyzed:false },
+    'FMA-2026-001': { title:'FMA-2026-001', sub:'Encuesta satisfacción clientes no ejecutada · Cláusula 9.1.2', clause:'9.1.2', resp:'A. Morales', date:'10/02/2026', priority:'Baja', priorityClass:'p-baja', status:'Cerrada', statusClass:'tag-closed', desc:'La encuesta de satisfacción de clientes Q4 2025 no fue ejecutada dentro del plazo establecido en PR-009.', analyzed:false }
+  };
+
+  let currentFMA = 'FMA-2026-003';
+  let chatHistory = [], flowStep = 0, whyAnswers = [], allAnswers = {};
+  let waitingForInput = false, quickReplyOptions = [];
+  let acciones3P = [];
+
+  function showView(name, btn) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('view-' + name).classList.add('active');
+    if (btn) btn.classList.add('active');
+  }
+
+  function openDetail(code) {
+    currentFMA = code;
+    const nc = fmas[code]; if (!nc) return;
+    document.getElementById('detail-title').textContent = nc.title;
+    document.getElementById('detail-sub').textContent = nc.sub;
+    document.getElementById('d-code').textContent = nc.title;
+    document.getElementById('d-clause').textContent = nc.clause;
+    document.getElementById('d-resp').textContent = nc.resp;
+    document.getElementById('d-date').textContent = nc.date;
+    document.getElementById('d-desc').textContent = nc.desc;
+    document.getElementById('tl-reg-meta').textContent = nc.date + ' · Sistema';
+    const statusEl = document.getElementById('detail-status');
+    statusEl.className = 'status-tag ' + nc.statusClass;
+    statusEl.innerHTML = '<span class="dot"></span>' + nc.status;
+    const prioEl = document.getElementById('detail-priority');
+    prioEl.className = 'priority-tag ' + nc.priorityClass;
+    prioEl.textContent = nc.priority;
+    resetChat();
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-detail').classList.add('active');
+  }
+
+  function resetChat() {
+    chatHistory = []; flowStep = 0; whyAnswers = []; allAnswers = {}; acciones3P = []; waitingForInput = false;
+    document.getElementById('chat-messages').innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--ink-3)"><div style="font-size:28px;margin-bottom:12px;opacity:0.3">✦</div><div style="font-size:13px;font-style:italic">Presiona <strong style="color:var(--ink-2)">Iniciar análisis</strong> para guiarte por el flujo completo de acción correctiva según cláusula 10.2.</div></div>';
+    document.getElementById('quick-replies').style.display = 'none';
+    document.getElementById('quick-replies').innerHTML = '';
+    document.getElementById('chat-input-area').style.display = 'none';
+    document.getElementById('ai-footer').style.display = 'flex';
+    document.getElementById('pdf-footer').style.display = 'none';
+    document.getElementById('progress-5why').style.display = 'none';
+    document.getElementById('tres-p-panel').style.display = 'none';
+    document.getElementById('btn-analyze').innerHTML = '✦ Iniciar análisis · Cláusula 10.2';
+    document.getElementById('btn-analyze').disabled = false;
+    document.getElementById('tl-analysis-dot').className = 'tl-dot active';
+    document.getElementById('tl-analysis-meta').textContent = 'Pendiente';
+    document.getElementById('tl-plan-dot').className = 'tl-dot';
+    document.getElementById('tl-plan-meta').textContent = 'Esperando análisis';
+    updateWhyProgress(0);
+  }
+
+  function updateWhyProgress(step) {
+    for (let i = 1; i <= 5; i++) {
+      const el = document.getElementById('ws' + i); if (!el) continue;
+      if (i < step) el.className = 'why-step done';
+      else if (i === step) el.className = 'why-step active';
+      else el.className = 'why-step';
+    }
+    const label = document.getElementById('why-label'); if (!label) return;
+    if (step === 0) label.textContent = '5 Porqués';
+    else if (step <= 5) label.textContent = `¿Por qué? ${step}/5`;
+    else label.textContent = '✓ Completo';
+  }
+
+  function appendAIMessage(html, badge) {
+    const msgs = document.getElementById('chat-messages');
+    const div = document.createElement('div'); div.className = 'chat-msg ai';
+    div.innerHTML = `<div class="chat-avatar">✦</div><div class="chat-bubble">${badge ? `<div class="why-badge">${badge}</div>` : ''}${html}</div>`;
+    msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function appendUserMessage(text) {
+    const msgs = document.getElementById('chat-messages');
+    const div = document.createElement('div'); div.className = 'chat-msg user';
+    div.innerHTML = `<div class="chat-avatar">tú</div><div class="chat-bubble">${text}</div>`;
+    msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function showTyping() {
+    const msgs = document.getElementById('chat-messages');
+    const id = 'typing-' + Date.now(); const div = document.createElement('div');
+    div.className = 'chat-msg ai typing-row'; div.id = id;
+    div.innerHTML = '<div class="chat-avatar">✦</div><div class="typing-dots"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+    msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight; return id;
+  }
+
+  function removeTyping(id) { const el = document.getElementById(id); if (el) el.remove(); }
+  function showQuickReplies(options) {
+    quickReplyOptions = options;
+    const qr = document.getElementById('quick-replies'); qr.style.display = 'flex';
+    qr.innerHTML = options.map((o, i) => `<button class="qr-btn" onclick="selectQuickReply(${i})">${o}</button>`).join('');
+  }
+  function hideQuickReplies() { document.getElementById('quick-replies').style.display = 'none'; document.getElementById('quick-replies').innerHTML = ''; }
+  function showInputArea() { document.getElementById('chat-input-area').style.display = 'flex'; document.getElementById('chat-text').focus(); waitingForInput = true; }
+  function hideInputArea() { document.getElementById('chat-input-area').style.display = 'none'; waitingForInput = false; }
+  function selectQuickReply(idx) { const text = quickReplyOptions[idx]; hideQuickReplies(); hideInputArea(); processUserInput(text); }
+
+  function sendUserMessage() {
+    const input = document.getElementById('chat-text');
+    const text = input.value.trim(); if (!text) return;
+    input.value = ''; hideQuickReplies(); hideInputArea(); processUserInput(text);
+  }
+
+  function buildSystemPrompt(nc) {
+    return `Eres NormaAI FMA, asistente experto en ISO 9001:2015 para análisis de No Conformidades con metodología 5 Porqués.
+
+NC: ${nc.title} · Cláusula ${nc.clause}
+Descripción: ${nc.desc}
+Responsable: ${nc.resp}
+
+FLUJO (10.2.1):
+1. CORRECCIÓN INMEDIATA
+2. 5 PORQUÉS en secuencia
+3. ACCIONES CORRECTIVAS modelo 3P (Procesos, Personas, Procedimientos) — 2 acciones por bloque
+4. VERIFICACIÓN DE EFICACIA
+5. RIESGOS Y OPORTUNIDADES (6.1)
+6. CAMBIOS AL SGC
+7. RESULTADO FINAL
+
+JSON siempre válido:
+{
+  "mensaje": "texto (HTML básico OK)",
+  "tipo": "correccion|porque_1|porque_2|porque_3|porque_4|porque_5|acciones_3p|verificacion|riesgos|cambios_sgc|resultado_final",
+  "sugerencias": ["op1","op2","op3"],
+  "acciones_3p": {
+    "procesos": ["acción 1","acción 2"],
+    "personas": ["acción 1","acción 2"],
+    "procedimientos": ["acción 1","acción 2"]
+  }
+}
+En resultado_final agrega: causa_raiz, acciones_seleccionadas (array), correccion, verificacion, riesgos, cambios_sgc.
+Máximo 2-3 oraciones. Sé contextual y conciso.`;
+  }
+
+  async function startAnalysis() {
+    const nc = fmas[currentFMA]; flowStep = 1;
+    document.getElementById('ai-footer').style.display = 'none';
+    document.getElementById('progress-5why').style.display = 'flex';
+    document.getElementById('chat-messages').innerHTML = '';
+    updateWhyProgress(1); chatHistory = [];
+    const typId = showTyping();
+    const result = await callAI(buildSystemPrompt(nc), 'Inicia. Pregunta por la CORRECCIÓN INMEDIATA (tipo:"correccion"). Da 3-4 sugerencias contextuales.');
+    removeTyping(typId);
+    handleAIResponse(result || { mensaje:`Iniciemos el análisis de <strong>${nc.title}</strong> según cláusula 10.2.<br><br>¿Qué acción inmediata se tomó para contener esta NC?`, tipo:'correccion', sugerencias:['Segregar y detener el proceso afectado','Notificar al área y suspender temporalmente','Revisar manualmente los registros afectados','Aplicar control de producto no conforme (8.7)'] }, nc);
+  }
+
+  async function processUserInput(text) {
+    appendUserMessage(text);
+    chatHistory.push({ role:'user', content:text });
+    const nc = fmas[currentFMA]; const typId = showTyping(); let instruction = '';
+    if (flowStep === 1) {
+      allAnswers.correccion = text; flowStep = 3; whyAnswers.push(''); updateWhyProgress(2);
+      instruction = `Corrección: "${text}". PRIMER PORQUÉ (tipo:"porque_1"): ¿por qué ocurrió esta NC? 3-4 sugerencias.`;
+    } else if (flowStep >= 3 && flowStep <= 6) {
+      whyAnswers.push(text); const n = flowStep - 2; flowStep++;
+      instruction = `Porqué ${n}: "${text}". PORQUÉ ${n+1} (tipo:"porque_${n+1}"): profundiza.`;
+    } else if (flowStep === 7) {
+      whyAnswers.push(text); allAnswers.whyAnswers = whyAnswers.filter(w=>w); flowStep = 8; updateWhyProgress(3);
+      instruction = `Porqué 5: "${text}". Sintetiza la causa raíz. Propón ACCIONES 3P (tipo:"acciones_3p"): 2 acciones por bloque. Mensaje breve + JSON acciones_3p.`;
+    } else if (flowStep === 9) {
+      allAnswers.verificacion = text; flowStep = 10; updateWhyProgress(5);
+      instruction = `Verificación: "${text}". RIESGOS Y OPORTUNIDADES (tipo:"riesgos", 6.1). 3 sugerencias.`;
+    } else if (flowStep === 10) {
+      allAnswers.riesgos = text; flowStep = 11;
+      instruction = `Riesgos: "${text}". CAMBIOS AL SGC (tipo:"cambios_sgc", 10.2.1.f). 3 sugerencias.`;
+    } else if (flowStep === 11) {
+      allAnswers.cambios_sgc = text; flowStep = 12; updateWhyProgress(6);
+      instruction = `Cambios SGC: "${text}". RESULTADO FINAL (tipo:"resultado_final"): causa_raiz, acciones_seleccionadas, correccion, verificacion, riesgos, cambios_sgc.`;
+    }
+    const result = await callAI(buildSystemPrompt(nc), instruction, chatHistory.slice(-6));
+    removeTyping(typId);
+    handleAIResponse(result, nc);
+  }
+
+  const sugerenciasFallback = {
+    correccion: ['Segregar y detener el proceso afectado', 'Notificar al área responsable y suspender temporalmente', 'Revisar manualmente los registros afectados', 'Aplicar control de producto no conforme (8.7)'],
+    porque_1: ['No hay alerta ni recordatorio definido', 'El responsable no tenía claridad del requisito', 'Faltó seguimiento periódico', 'Responsabilidad no asignada'],
+    porque_2: ['No hay procedimiento definido', 'El procedimiento existe pero no se cumple', 'Falta supervisión del proceso', 'Cambio de personal sin traspaso'],
+    porque_3: ['Nunca se estableció formalmente', 'Se perdió con cambio de personal', 'No está integrado al SGC', 'Falta de recursos asignados'],
+    porque_4: ['No hay dueño de proceso asignado', 'La dirección no lo priorizó', 'Faltó revisión por la dirección', 'No está en los objetivos del SGC'],
+    porque_5: ['Cultura reactiva, no preventiva', 'SGC no integrado a la operación real', 'Falta de métricas de seguimiento', 'Ausencia de mejora continua formal'],
+    verificacion: ['Auditoría interna en 90 días', 'Indicador mensual por 3 meses', 'Revisión en próxima reunión de dirección'],
+    riesgos: ['Riesgo de recurrencia en procesos similares', 'Oportunidad de automatizar el control', 'Sin riesgos adicionales identificados'],
+    cambios_sgc: ['Actualizar procedimiento relacionado', 'Incorporar indicador en cuadro de mando', 'No se requieren cambios al SGC']
+  };
+
+  function handleAIResponse(data, nc) {
+    if (!data) { handleFallback(flowStep, nc); return; }
+    let { mensaje, tipo, sugerencias=[], acciones_3p, causa_raiz, correccion, verificacion, riesgos, cambios_sgc, acciones_seleccionadas=[] } = data;
+    if ((!sugerencias || sugerencias.length === 0) && sugerenciasFallback[tipo]) sugerencias = sugerenciasFallback[tipo];
+
+    if (tipo === 'resultado_final') {
+      appendAIMessage(mensaje || 'Análisis completado según cláusula 10.2.1.');
+      renderFinalResult({ causa_raiz, acciones_seleccionadas, correccion, verificacion, riesgos, cambios_sgc });
+      nc.analyzed = true;
+      nc.finalData = { causa_raiz, acciones_seleccionadas, correccion, verificacion, riesgos, cambios_sgc, whyAnswers:[...whyAnswers], acciones3P:[...acciones3P] };
+      document.getElementById('tl-analysis-dot').className = 'tl-dot done';
+      document.getElementById('tl-analysis-meta').textContent = 'Análisis 10.2 completado';
+      document.getElementById('tl-plan-dot').className = 'tl-dot done';
+      document.getElementById('tl-plan-meta').textContent = 'Plan de acción generado';
+      document.getElementById('why-label').textContent = '✓ Completo';
+      document.getElementById('pdf-footer').style.display = 'block';
+      return;
+    }
+    if (tipo === 'acciones_3p') {
+      appendAIMessage(mensaje, '④ Acciones correctivas · 3P');
+      render3PPanel(acciones_3p || { procesos:['Implementar alerta automática de vencimiento','Revisar flujo del proceso afectado'], personas:['Capacitar al equipo en el requisito normativo','Designar responsable formal con revisión mensual'], procedimientos:['Actualizar procedimiento con nuevo ciclo de revisión','Incorporar indicador en el cuadro de mando del SGC'] });
+      flowStep = 9; updateWhyProgress(4);
+      return;
+    }
+    const badgeMap = { correccion:'① Corrección inmediata', porque_1:'③ ¿Por qué? 1/5', porque_2:'③ ¿Por qué? 2/5', porque_3:'③ ¿Por qué? 3/5', porque_4:'③ ¿Por qué? 4/5', porque_5:'③ ¿Por qué? 5/5', verificacion:'⑤ Verificación de eficacia', riesgos:'⑥ Riesgos y oportunidades', cambios_sgc:'⑦ Cambios al SGC' };
+    appendAIMessage(mensaje, badgeMap[tipo] || null);
+    if (sugerencias.length > 0) showQuickReplies(sugerencias);
+    showInputArea();
+  }
+
+  function render3PPanel(data) {
+    const panel = document.getElementById('tres-p-panel');
+    const bloques = document.getElementById('p-bloques');
+    const grupos = [
+      { key:'procesos', label:'Procesos', icon:'🔧', cls:'proceso', acciones: data.procesos||[] },
+      { key:'personas', label:'Personas', icon:'👥', cls:'persona', acciones: data.personas||[] },
+      { key:'procedimientos', label:'Procedimientos', icon:'📄', cls:'procedimiento', acciones: data.procedimientos||[] }
+    ];
+    bloques.innerHTML = grupos.map(g => `<div class="p-block"><div class="p-block-title ${g.cls}"><div class="p-icon ${g.cls}">${g.icon}</div>${g.label}</div>${g.acciones.map((a, i) => `<div class="accion-row" id="ar-${g.key}-${i}" onclick="toggleAccion('${g.key}',${i},this)"><div class="accion-check" id="ck-${g.key}-${i}"></div><div class="accion-content"><div class="accion-text">${a}</div><div class="accion-meta-row"><div class="accion-field"><div class="accion-field-label">Responsable</div><input class="accion-field-input" type="text" placeholder="Nombre..." id="resp-${g.key}-${i}" onclick="event.stopPropagation()" /></div><div class="accion-field"><div class="accion-field-label">Fecha implementación</div><input class="accion-field-input" type="date" id="fecha-${g.key}-${i}" onclick="event.stopPropagation()" /></div></div></div></div>`).join('')}</div>`).join('');
+    panel.style.display = 'block';
+    panel.scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+
+  function toggleAccion(key, idx, row) {
+    row.classList.toggle('selected');
+    const ck = document.getElementById(`ck-${key}-${idx}`);
+    ck.textContent = row.classList.contains('selected') ? '✓' : '';
+  }
+
+  function confirmar3P() {
+    const grupos = ['procesos','personas','procedimientos'];
+    const seleccionadas = [];
+    grupos.forEach(g => {
+      document.querySelectorAll(`[id^="ar-${g}-"]`).forEach((row, i) => {
+        if (row.classList.contains('selected')) {
+          const texto = row.querySelector('.accion-text').textContent;
+          const resp = document.getElementById(`resp-${g}-${i}`)?.value || '';
+          const fecha = document.getElementById(`fecha-${g}-${i}`)?.value || '';
+          seleccionadas.push({ tipo: g, texto, resp, fecha });
+        }
+      });
+    });
+    if (seleccionadas.length === 0) { showToast('Selecciona al menos una acción correctiva', false); return; }
+    acciones3P = seleccionadas;
+    allAnswers.acciones3P = seleccionadas;
+    document.getElementById('tres-p-panel').style.display = 'none';
+    const resumen = seleccionadas.map((a,i) => `${i+1}. [${a.tipo.toUpperCase()}] ${a.texto}${a.resp ? ' · ' + a.resp : ''}${a.fecha ? ' · ' + a.fecha : ''}`).join(', ');
+    appendUserMessage(`Acciones seleccionadas: ${seleccionadas.map(a=>a.texto).join(' / ')}`);
+    chatHistory.push({ role:'user', content:`Acciones correctivas confirmadas: ${resumen}` });
+    const nc = fmas[currentFMA];
+    const typId = showTyping();
+    callAI(buildSystemPrompt(nc), `Acciones correctivas 3P confirmadas: ${resumen}. Pregunta VERIFICACIÓN DE EFICACIA (tipo:"verificacion", 10.2.1.d). Da 3 sugerencias.`, chatHistory.slice(-6))
+      .then(result => { removeTyping(typId); handleAIResponse(result || { mensaje:'¿Cómo y cuándo se verificará que las acciones fueron eficaces? (cláusula 10.2.1.d)', tipo:'verificacion', sugerencias:['Auditoría interna en 90 días','Indicador mensual por 3 meses','Revisión en reunión de dirección'] }, nc); });
+  }
+
+  function renderFinalResult(data) {
+    const { causa_raiz, acciones_seleccionadas=[], correccion, verificacion, riesgos, cambios_sgc } = data;
+    const msgs = document.getElementById('chat-messages');
+    const div = document.createElement('div'); div.className = 'final-result-card';
+    const sec = (label, valor, color) => valor ? `<div style="margin-bottom:10px"><div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:${color};margin-bottom:4px">${label}</div><div style="font-size:12px;color:var(--ink-2);padding:8px 10px;background:var(--bg-2);border-radius:6px;border:1px solid var(--border);line-height:1.5">${valor}</div></div>` : '';
+    const accionesHTML = acciones3P.length > 0
+      ? acciones3P.map((a,i) => `<div class="accion-mini"><div class="accion-mini-num">${['🔧','👥','📄'][['procesos','personas','procedimientos'].indexOf(a.tipo)] || '•'} A${i+1}</div><div><strong>${a.texto}</strong>${a.resp ? '<br><span style="font-size:10px;color:var(--ink-3)">Resp: '+a.resp+'</span>' : ''}${a.fecha ? '<span style="font-size:10px;color:var(--ink-3);margin-left:8px">Fecha: '+a.fecha+'</span>' : ''}</div></div>`).join('')
+      : acciones_seleccionadas.map((a,i) => `<div class="accion-mini"><div class="accion-mini-num">A${i+1}</div><div>${typeof a==='string'?a:a.texto||''}</div></div>`).join('');
+    div.innerHTML = `${sec('① Corrección inmediata', correccion, 'var(--warn)')}<div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--tag-open-text);margin-bottom:4px">③ Causa raíz identificada</div><div class="final-causa">${causa_raiz||'Identificada mediante 5 Porqués.'}</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold);margin-bottom:6px;text-transform:uppercase;margin-top:10px">④ Acciones correctivas · 3P</div>${accionesHTML}${sec('⑤ Verificación de eficacia', verificacion, 'var(--success)')}${sec('⑥ Riesgos y oportunidades (6.1)', riesgos, 'var(--ink-3)')}${sec('⑦ Cambios al SGC', cambios_sgc, 'var(--gold)')}`;
+    msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  async function callAI(systemPrompt, userMsg, history=[]) {
+    const messages = [...history.filter(m=>m.role==='user'||m.role==='assistant').slice(-4), {role:'user',content:userMsg}];
+    try {
+      const response = await fetch('/api/analizar', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({systemPrompt, userMsg, history:messages, incluirDocumentos: flowStep <= 3}) });
+      if (!response.ok) throw new Error('API error ' + response.status);
+      return await response.json();
+    } catch(e) { console.warn('callAI error:', e); return null; }
+  }
+
+  const fallbackFlow = {
+    3:{mensaje:'¿Por qué ocurrió esta no conformidad?',sugerencias:['No hay alerta definida','El responsable no tenía claridad del requisito','Faltó seguimiento periódico','Responsabilidad no asignada']},
+    4:{mensaje:'¿Y por qué ocurre eso?',sugerencias:['No hay procedimiento definido','El procedimiento no se cumple','Falta supervisión']},
+    5:{mensaje:'¿Por qué no existe ese control?',sugerencias:['Nunca se estableció formalmente','Se perdió con cambio de personal','No está integrado al SGC']},
+    6:{mensaje:'¿Por qué no se estableció ese control?',sugerencias:['No hay dueño de proceso','La dirección no lo priorizó','Faltó revisión por la dirección']},
+    7:{mensaje:'¿Cuál es la razón de fondo?',sugerencias:['Cultura reactiva, no preventiva','SGC no integrado a la operación','Falta de métricas']},
+    8:{mensaje:'Acciones 3P',acciones_3p:{procesos:['Implementar alerta automática','Revisar flujo del proceso'],personas:['Capacitar al equipo','Designar responsable formal'],procedimientos:['Actualizar procedimiento','Incorporar indicador en SGC']},tipo:'acciones_3p'},
+    9:{mensaje:'¿Cómo se verificará la eficacia? (10.2.1.d)',sugerencias:['Auditoría interna en 90 días','Indicador mensual por 3 meses','Revisión en reunión de dirección']},
+    10:{mensaje:'¿Esta NC revela algún riesgo no identificado? (6.1)',sugerencias:['Riesgo de recurrencia en procesos similares','Oportunidad de automatizar el control','Sin riesgos adicionales']},
+    11:{mensaje:'¿Se requieren cambios al SGC? (10.2.1.f)',sugerencias:['Actualizar procedimiento relacionado','Incorporar indicador en cuadro de mando','No se requieren cambios']}
+  };
+
+  function handleFallback(step, nc) {
+    if (step >= 12) {
+      handleAIResponse({ tipo:'resultado_final', mensaje:'Análisis completado según cláusula 10.2.1.', causa_raiz:whyAnswers.filter(w=>w).slice(-1)[0]||'Ausencia de controles formales en el SGC', acciones_seleccionadas:acciones3P.map(a=>a.texto), correccion:allAnswers.correccion||'', verificacion:allAnswers.verificacion||'Auditoría interna en 90 días', riesgos:allAnswers.riesgos||'Riesgo de recurrencia en procesos similares', cambios_sgc:allAnswers.cambios_sgc||'Actualización de procedimiento requerida' }, nc);
+    } else if (step === 8) {
+      handleAIResponse({ tipo:'acciones_3p', mensaje:'Hemos identificado la causa raíz. Ahora selecciona las acciones correctivas por dimensión:', acciones_3p:{procesos:['Implementar alerta automática de vencimiento','Revisar flujo del proceso afectado'],personas:['Capacitar al equipo en el requisito normativo','Designar responsable formal con revisión mensual'],procedimientos:['Actualizar procedimiento con nuevo ciclo de revisión','Incorporar indicador en cuadro de mando del SGC']} }, nc);
+    } else {
+      const fb = fallbackFlow[step]; if (!fb) return;
+      const badge = (step>=3&&step<=7)?`③ ¿Por qué? ${step-2}/5`:null;
+      appendAIMessage(fb.mensaje, badge);
+      if (fb.sugerencias) showQuickReplies(fb.sugerencias);
+      showInputArea();
+    }
+  }
+
+  // MANNY
+  let mannyHistory = [];
+
+  async function sendManny() {
+    const input = document.getElementById('manny-input');
+    const text = input.value.trim(); if (!text) return;
+    input.value = '';
+    const msgs = document.getElementById('manny-messages');
+    const userDiv = document.createElement('div'); userDiv.className = 'chat-msg user';
+    userDiv.innerHTML = `<div class="chat-avatar">tú</div><div class="chat-bubble">${text}</div>`;
+    msgs.appendChild(userDiv); msgs.scrollTop = msgs.scrollHeight;
+    mannyHistory.push({ role:'user', content:text });
+    const btn = document.getElementById('manny-send-btn');
+    btn.disabled = true; btn.textContent = '...';
+    const typId = 'manny-typing-' + Date.now();
+    const typDiv = document.createElement('div'); typDiv.className = 'chat-msg ai typing-row'; typDiv.id = typId;
+    typDiv.innerHTML = '<div class="chat-avatar">✦</div><div class="typing-dots"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
+    msgs.appendChild(typDiv); msgs.scrollTop = msgs.scrollHeight;
+    try {
+      const response = await fetch('/api/manny', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ message: text, history: mannyHistory.slice(-8) }) });
+      const data = await response.json();
+      document.getElementById(typId)?.remove();
+      const aiDiv = document.createElement('div'); aiDiv.className = 'chat-msg ai';
+      const reply = data.respuesta || data.mensaje || 'Lo siento, no pude procesar esa consulta.';
+      aiDiv.innerHTML = `<div class="chat-avatar">✦</div><div class="chat-bubble">${reply}</div>`;
+      msgs.appendChild(aiDiv); msgs.scrollTop = msgs.scrollHeight;
+      mannyHistory.push({ role:'assistant', content:reply });
+    } catch(e) {
+      document.getElementById(typId)?.remove();
+      const errDiv = document.createElement('div'); errDiv.className = 'chat-msg ai';
+      errDiv.innerHTML = `<div class="chat-avatar">✦</div><div class="chat-bubble">Error de conexión con el servidor. Verifica que /api/manny esté disponible.</div>`;
+      msgs.appendChild(errDiv); msgs.scrollTop = msgs.scrollHeight;
+    }
+    btn.disabled = false; btn.textContent = 'Enviar →';
+  }
+
+  function exportPDF() {
+    const nc = fmas[currentFMA]; const fd = nc.finalData||{};
+    const causaRaiz = fd.causa_raiz||'Identificada mediante 5 Porqués';
+    const whys = (fd.whyAnswers||whyAnswers).filter(w=>w);
+    const acciones = fd.acciones3P||acciones3P;
+    const fecha = new Date().toLocaleDateString('es-CL',{year:'numeric',month:'long',day:'numeric'});
+    const tipoIcon = {procesos:'🔧',personas:'👥',procedimientos:'📄'};
+    const tipoLabel = {procesos:'Procesos',personas:'Personas',procedimientos:'Procedimientos'};
+    const porqueRows = whys.map((w,i)=>`<tr><td style="width:90px;font-weight:600;color:#b8860b;padding:8px 12px;border:1px solid #ddd;background:#fffdf0;vertical-align:top">¿Por qué ${i+1}?</td><td style="padding:8px 12px;border:1px solid #ddd">${w}</td></tr>`).join('');
+    const accionRows = acciones.length > 0
+      ? acciones.map((a,i)=>`<tr><td style="padding:8px;border:1px solid #ddd;background:#fffdf0;text-align:center;width:28px">${tipoIcon[a.tipo]||'•'}</td><td style="padding:8px 12px;border:1px solid #ddd;width:80px;font-size:10px;color:#b8860b;font-weight:600;text-transform:uppercase">${tipoLabel[a.tipo]||''}</td><td style="padding:8px 12px;border:1px solid #ddd">${a.texto}</td><td style="padding:8px 12px;border:1px solid #ddd;font-size:11px;color:#555">${a.resp||'—'}</td><td style="padding:8px 12px;border:1px solid #ddd;font-size:11px;font-family:monospace">${a.fecha||'—'}</td></tr>`).join('')
+      : '<tr><td colspan="5" style="padding:8px;color:#999;font-style:italic">Sin acciones registradas</td></tr>';
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Plan · ${nc.title}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#1a1916;background:white;padding:40px}.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:16px;border-bottom:3px solid #d4af37}.brand{font-size:22px;font-weight:800;color:#d4af37}.doc-meta{text-align:right;font-size:10px;color:#888;line-height:1.7}h1{font-size:18px;font-weight:700;margin-bottom:4px}.subtitle{font-size:12px;color:#555;margin-bottom:24px}.section{margin-bottom:18px}.section-title{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#888;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #eee}.info-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1px;background:#eee;border:1px solid #eee;margin-bottom:18px}.info-cell{background:white;padding:10px 12px}.info-label{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:3px}.info-value{font-size:12px;font-weight:500}.box{padding:10px 14px;border-radius:4px;line-height:1.6;font-size:12px;border:1px solid}.box-gold{background:#fffdf0;border-color:#f0e068;border-left:3px solid #d4af37}.box-amber{background:#fffbeb;border-color:#fcd34d;border-left:3px solid #b45309}.box-red{background:#fff5f5;border-color:#fca5a5;border-left:3px solid #b91c1c}.box-green{background:#f0fdf4;border-color:#86efac;border-left:3px solid #15803d}.box-gray{background:#f9f9f7;border-color:#e2e2de;border-left:3px solid #888}table{width:100%;border-collapse:collapse}th{padding:8px 12px;background:#1a1916;color:white;text-align:left;font-size:10px}td{padding:8px 12px;border:1px solid #eee;vertical-align:top}.sign-area{margin-top:36px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px}.sign-box{border-top:1px solid #ccc;padding-top:8px;text-align:center;font-size:10px;color:#888;line-height:1.8}.footer{margin-top:20px;padding-top:10px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:9px;color:#888}@media print{body{padding:20px}}</style></head><body>
+<div class="header"><div><div class="brand">NormaAI FMA</div><div style="font-size:10px;color:#888;margin-top:2px">Faltas · Medidas · Acciones · ISO 9001:2015</div></div><div class="doc-meta"><div><strong>Código:</strong> ${nc.title}</div><div><strong>Fecha:</strong> ${fecha}</div><div><strong>Cláusula:</strong> ${nc.clause} · Acción correctiva 10.2</div></div></div>
+<h1>Plan de Acción Correctiva</h1><div class="subtitle">${nc.sub}</div>
+<div class="section"><div class="section-title">Datos de la No Conformidad</div><div class="info-grid"><div class="info-cell"><div class="info-label">Código</div><div class="info-value">${nc.title}</div></div><div class="info-cell"><div class="info-label">Cláusula</div><div class="info-value">${nc.clause}</div></div><div class="info-cell"><div class="info-label">Responsable</div><div class="info-value">${nc.resp}</div></div><div class="info-cell"><div class="info-label">Prioridad</div><div class="info-value">${nc.priority}</div></div></div><div class="box box-gray">${nc.desc}</div></div>
+${fd.correccion?`<div class="section"><div class="section-title">① Corrección Inmediata · 10.2.1.a</div><div class="box box-amber">${fd.correccion}</div></div>`:''}
+${whys.length>0?`<div class="section"><div class="section-title">② Análisis 5 Porqués · 10.2.1.b</div><table><tbody>${porqueRows}</tbody></table></div>`:''}
+<div class="section"><div class="section-title">③ Causa Raíz · 10.2.1.b</div><div class="box box-red">${causaRaiz}</div></div>
+<div class="section"><div class="section-title">④ Acciones Correctivas · Modelo 3P · 10.2.1.c</div><table><thead><tr><th style="width:28px"></th><th style="width:90px">Dimensión</th><th>Acción</th><th style="width:120px">Responsable</th><th style="width:100px">Fecha</th></tr></thead><tbody>${accionRows}</tbody></table></div>
+${fd.verificacion?`<div class="section"><div class="section-title">⑤ Verificación de Eficacia · 10.2.1.d</div><div class="box box-green">${fd.verificacion}</div></div>`:''}
+${fd.riesgos?`<div class="section"><div class="section-title">⑥ Riesgos y Oportunidades · 6.1</div><div class="box box-gray">${fd.riesgos}</div></div>`:''}
+${fd.cambios_sgc?`<div class="section"><div class="section-title">⑦ Cambios al SGC · 10.2.1.f</div><div class="box box-gold">${fd.cambios_sgc}</div></div>`:''}
+<div class="sign-area"><div class="sign-box">Elaborado por<br><br><strong>${nc.resp}</strong><br>Responsable NC</div><div class="sign-box">Revisado por<br><br>&nbsp;<br>Jefe de Calidad</div><div class="sign-box">Aprobado por<br><br>&nbsp;<br>Representante de Dirección</div></div>
+<div class="footer"><span>Generado por NormaAI FMA · Procesus · ${fecha}</span><span>ISO 9001:2015 · Cláusula 10.2 · Documento controlado</span></div>
+</body></html>`;
+    const win = window.open('','_blank');
+    if (!win) { showToast('Permite ventanas emergentes para el PDF', false); return; }
+    win.document.write(html); win.document.close(); win.focus();
+    setTimeout(()=>win.print(), 700);
+  }
+
+  function saveNC() {
+    const desc = document.getElementById('new-desc').value.trim();
+    const clause = document.getElementById('new-clause').value;
+    const resp = document.getElementById('new-resp').value.trim();
+    if (!desc||!clause||!resp) { showToast('Completa los campos obligatorios', false); return; }
+    const code = 'FMA-2026-004';
+    fmas[code] = { title:code, sub:desc.substring(0,50)+'… · Cláusula '+clause.split('·')[0].trim(), clause:clause.split('·')[0].trim(), resp, date:new Date().toLocaleDateString('es-CL'), priority:document.getElementById('new-priority').value, priorityClass:{Alta:'p-alta',Media:'p-media',Baja:'p-baja'}[document.getElementById('new-priority').value], status:'Abierta', statusClass:'tag-open', desc, analyzed:false };
+    showToast('NC registrada · iniciando análisis…', true);
+    setTimeout(()=>openDetail(code), 400);
+  }
+
+  function mobileNav(view, btn) {
+    document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    showView(view, null);
+  }
+
+  function showToast(msg, ok) {
+    const t = document.getElementById('toast'); t.textContent = msg;
+    t.className = 'toast show'+(ok?' toast-green':'');
+    setTimeout(()=>t.className='toast', 2800);
+  }
+</script>
+</body>
+</html>
