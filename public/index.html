@@ -307,6 +307,44 @@
   .mobile-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: none; background: none; cursor: pointer; color: var(--ink-3); font-size: 9px; font-family: 'DM Sans', sans-serif; letter-spacing: 0.3px; transition: color 0.15s; padding: 8px 4px; }
   .mobile-nav-item.active { color: var(--gold); }
   .mobile-nav-item .mn-icon { font-size: 18px; line-height: 1; }
+
+  /* NOTICIAS */
+  .noticias-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-bottom: 24px; }
+  .noticia-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: box-shadow 0.2s; }
+  .noticia-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+  .noticia-img { width: 100%; height: 180px; object-fit: cover; background: #eeede9; display: block; }
+  .noticia-img-placeholder { width: 100%; height: 180px; background: linear-gradient(135deg, #eeede9 0%, #e2e0db 100%); display: flex; align-items: center; justify-content: center; font-size: 32px; color: var(--ink-3); }
+  .noticia-body { padding: 16px 18px 18px; }
+  .noticia-meta { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+  .noticia-titulo { font-family: 'DM Serif Display', serif; font-size: 17px; color: var(--ink); line-height: 1.3; margin-bottom: 8px; letter-spacing: -0.3px; }
+  .noticia-texto { font-size: 13px; color: var(--ink-2); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .noticia-actions { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .btn-edit-noticia { padding: 5px 12px; background: transparent; border: 1px solid var(--border); border-radius: 5px; font-size: 11px; color: var(--ink-3); cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+  .btn-edit-noticia:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-del-noticia { padding: 5px 12px; background: transparent; border: 1px solid var(--danger-border); border-radius: 5px; font-size: 11px; color: var(--danger); cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+  .btn-del-noticia:hover { background: var(--danger-light); }
+
+  /* MODAL NOTICIAS */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 500; display: flex; align-items: center; justify-content: center; animation: fadeUp 0.2s ease; }
+  .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+  .modal-header { padding: 20px 24px 0; display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--ink); }
+  .modal-close { background: none; border: none; font-size: 20px; color: var(--ink-3); cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: all 0.15s; }
+  .modal-close:hover { background: var(--bg-3); color: var(--ink); }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; background: var(--surface-2); border-radius: 0 0 12px 12px; }
+
+  /* Admin gate */
+  .admin-gate { background: var(--gold-light); border: 1px solid var(--gold); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .admin-gate-input { flex: 1; background: white; border: 1px solid var(--border); border-radius: 6px; padding: 7px 12px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--ink); outline: none; }
+  .admin-gate-input:focus { border-color: var(--gold); }
+  .admin-gate-btn { padding: 7px 14px; background: var(--gold); color: #0a0908; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+
+  /* Imagen upload preview */
+  .img-upload-area { border: 2px dashed var(--border-strong); border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.15s; margin-bottom: 4px; }
+  .img-upload-area:hover { border-color: var(--gold); background: var(--gold-light); }
+  .img-upload-area.has-img { padding: 0; border-style: solid; overflow: hidden; }
+  .img-preview { width: 100%; height: 200px; object-fit: cover; display: block; }
 </style>
 </head>
 <body>
@@ -346,6 +384,7 @@
       <button class="nav-item active" onclick="showView('dashboard', this)"><span class="nav-icon">▦</span> Dashboard</button>
       <button class="nav-item" onclick="showView('lista', this)"><span class="nav-icon">≡</span> No Conformidades<span class="nav-count">3</span></button>
       <button class="nav-item" onclick="showView('documentos', this)"><span class="nav-icon">📄</span> Documentos</button>
+      <button class="nav-item" onclick="showView('noticias', this)"><span class="nav-icon">📰</span> Noticias<span class="nav-count" id="noticias-count" style="display:none">0</span></button>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Asistencia IA</div>
@@ -521,6 +560,72 @@
       </div>
     </div>
 
+
+    <!-- NOTICIAS -->
+    <div class="view" id="view-noticias">
+      <div class="page-header">
+        <div><div class="page-title">Noticias del SIG</div><div class="page-sub">Comunicaciones internas del Sistema de Gestión</div></div>
+        <button class="btn-primary" id="btn-nueva-noticia" style="display:none" onclick="abrirModalNoticia()">+ Nueva noticia</button>
+      </div>
+
+      <!-- Admin gate (visible solo cuando no está autenticado como admin) -->
+      <div class="admin-gate" id="admin-gate-noticias">
+        <span style="font-size:12px;color:var(--ink-2)">🔐 Acceso administrador SIG</span>
+        <input class="admin-gate-input" type="password" id="admin-pwd-input" placeholder="Clave admin..." />
+        <button class="admin-gate-btn" onclick="checkAdminPwd()">Ingresar</button>
+      </div>
+
+      <!-- Grid de noticias -->
+      <div class="noticias-grid" id="noticias-grid">
+        <div style="text-align:center;padding:60px 20px;color:var(--ink-3);grid-column:1/-1">
+          <div style="font-size:36px;margin-bottom:12px;opacity:0.3">📰</div>
+          <div style="font-size:13px">Cargando noticias...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL NUEVA/EDITAR NOTICIA -->
+    <div class="modal-overlay" id="modal-noticia" style="display:none" onclick="cerrarModalNoticia(event)">
+      <div class="modal-box">
+        <div class="modal-header">
+          <div class="modal-title" id="modal-noticia-titulo">Nueva noticia</div>
+          <button class="modal-close" onclick="cerrarModalNoticia()">✕</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="noticia-edit-id" />
+          <div class="form-group">
+            <label class="form-label">Título *</label>
+            <input class="field-input" type="text" id="noticia-titulo" placeholder="Título de la noticia..." />
+          </div>
+          <div class="form-group" style="margin-top:14px">
+            <label class="form-label">Fecha *</label>
+            <input class="field-input" type="date" id="noticia-fecha" />
+          </div>
+          <div class="form-group" style="margin-top:14px">
+            <label class="form-label">Imagen</label>
+            <div class="img-upload-area" id="img-upload-area" onclick="document.getElementById('noticia-img-input').click()">
+              <div id="img-upload-placeholder">
+                <div style="font-size:28px;margin-bottom:8px;opacity:0.4">🖼️</div>
+                <div style="font-size:12px;color:var(--ink-3)">Clic para subir imagen<br><span style="font-size:10px">JPG, PNG — máx. 2MB</span></div>
+              </div>
+              <img id="img-preview-el" class="img-preview" style="display:none" />
+            </div>
+            <input type="file" id="noticia-img-input" accept="image/*" style="display:none" onchange="previewImagen(this)" />
+            <div style="font-size:10px;color:var(--ink-3);margin-top:4px">O pega una URL de imagen:</div>
+            <input class="field-input" type="text" id="noticia-img-url" placeholder="https://..." style="margin-top:6px;font-size:12px" oninput="previewImagenUrl(this.value)" />
+          </div>
+          <div class="form-group" style="margin-top:14px">
+            <label class="form-label">Contenido *</label>
+            <textarea class="field-textarea" rows="5" id="noticia-texto" placeholder="Escribe el contenido de la noticia..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-ghost" onclick="cerrarModalNoticia()">Cancelar</button>
+          <button class="btn-primary" onclick="guardarNoticia()">Publicar noticia</button>
+        </div>
+      </div>
+    </div>
+
     <!-- DOCUMENTOS -->
     <div class="view" id="view-documentos">
       <div class="page-header">
@@ -581,7 +686,7 @@
 <div class="mobile-nav" id="mobile-nav">
   <button class="mobile-nav-item active" onclick="mobileNav('dashboard', this)"><span class="mn-icon">▦</span>Dashboard</button>
   <button class="mobile-nav-item" onclick="mobileNav('lista', this)"><span class="mn-icon">≡</span>NCs</button>
-  <button class="mobile-nav-item" onclick="mobileNav('manny', this)"><span class="mn-icon">✦</span>Manny</button>
+  <button class="mobile-nav-item" onclick="mobileNav('noticias', this)"><span class="mn-icon">📰</span>Noticias</button>
   <button class="mobile-nav-item" onclick="mobileNav('nueva', this)"><span class="mn-icon">+</span>Nueva</button>
 </div>
 
@@ -973,7 +1078,45 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     const accionRows = acciones.length > 0
       ? acciones.map((a,i)=>`<tr><td style="padding:8px;border:1px solid #ddd;background:#fffdf0;text-align:center;width:28px">${tipoIcon[a.tipo]||'•'}</td><td style="padding:8px 12px;border:1px solid #ddd;width:80px;font-size:10px;color:#b8860b;font-weight:600;text-transform:uppercase">${tipoLabel[a.tipo]||''}</td><td style="padding:8px 12px;border:1px solid #ddd">${a.texto}</td><td style="padding:8px 12px;border:1px solid #ddd;font-size:11px;color:#555">${a.resp||'—'}</td><td style="padding:8px 12px;border:1px solid #ddd;font-size:11px;font-family:monospace">${a.fecha||'—'}</td></tr>`).join('')
       : '<tr><td colspan="5" style="padding:8px;color:#999;font-style:italic">Sin acciones registradas</td></tr>';
-    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Plan · ${nc.title}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#1a1916;background:white;padding:40px}.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:16px;border-bottom:3px solid #d4af37}.brand{font-size:22px;font-weight:800;color:#d4af37}.doc-meta{text-align:right;font-size:10px;color:#888;line-height:1.7}h1{font-size:18px;font-weight:700;margin-bottom:4px}.subtitle{font-size:12px;color:#555;margin-bottom:24px}.section{margin-bottom:18px}.section-title{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#888;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #eee}.info-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1px;background:#eee;border:1px solid #eee;margin-bottom:18px}.info-cell{background:white;padding:10px 12px}.info-label{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:3px}.info-value{font-size:12px;font-weight:500}.box{padding:10px 14px;border-radius:4px;line-height:1.6;font-size:12px;border:1px solid}.box-gold{background:#fffdf0;border-color:#f0e068;border-left:3px solid #d4af37}.box-amber{background:#fffbeb;border-color:#fcd34d;border-left:3px solid #b45309}.box-red{background:#fff5f5;border-color:#fca5a5;border-left:3px solid #b91c1c}.box-green{background:#f0fdf4;border-color:#86efac;border-left:3px solid #15803d}.box-gray{background:#f9f9f7;border-color:#e2e2de;border-left:3px solid #888}table{width:100%;border-collapse:collapse}th{padding:8px 12px;background:#1a1916;color:white;text-align:left;font-size:10px}td{padding:8px 12px;border:1px solid #eee;vertical-align:top}.sign-area{margin-top:36px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px}.sign-box{border-top:1px solid #ccc;padding-top:8px;text-align:center;font-size:10px;color:#888;line-height:1.8}.footer{margin-top:20px;padding-top:10px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:9px;color:#888}@media print{body{padding:20px}}</style></head><body>
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Plan · ${nc.title}</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:#1a1916;background:white;padding:40px}.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:16px;border-bottom:3px solid #d4af37}.brand{font-size:22px;font-weight:800;color:#d4af37}.doc-meta{text-align:right;font-size:10px;color:#888;line-height:1.7}h1{font-size:18px;font-weight:700;margin-bottom:4px}.subtitle{font-size:12px;color:#555;margin-bottom:24px}.section{margin-bottom:18px}.section-title{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#888;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #eee}.info-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1px;background:#eee;border:1px solid #eee;margin-bottom:18px}.info-cell{background:white;padding:10px 12px}.info-label{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#888;margin-bottom:3px}.info-value{font-size:12px;font-weight:500}.box{padding:10px 14px;border-radius:4px;line-height:1.6;font-size:12px;border:1px solid}.box-gold{background:#fffdf0;border-color:#f0e068;border-left:3px solid #d4af37}.box-amber{background:#fffbeb;border-color:#fcd34d;border-left:3px solid #b45309}.box-red{background:#fff5f5;border-color:#fca5a5;border-left:3px solid #b91c1c}.box-green{background:#f0fdf4;border-color:#86efac;border-left:3px solid #15803d}.box-gray{background:#f9f9f7;border-color:#e2e2de;border-left:3px solid #888}table{width:100%;border-collapse:collapse}th{padding:8px 12px;background:#1a1916;color:white;text-align:left;font-size:10px}td{padding:8px 12px;border:1px solid #eee;vertical-align:top}.sign-area{margin-top:36px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px}.sign-box{border-top:1px solid #ccc;padding-top:8px;text-align:center;font-size:10px;color:#888;line-height:1.8}.footer{margin-top:20px;padding-top:10px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:9px;color:#888}@media print{body{padding:20px}}
+  /* NOTICIAS */
+  .noticias-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-bottom: 24px; }
+  .noticia-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: box-shadow 0.2s; }
+  .noticia-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+  .noticia-img { width: 100%; height: 180px; object-fit: cover; background: #eeede9; display: block; }
+  .noticia-img-placeholder { width: 100%; height: 180px; background: linear-gradient(135deg, #eeede9 0%, #e2e0db 100%); display: flex; align-items: center; justify-content: center; font-size: 32px; color: var(--ink-3); }
+  .noticia-body { padding: 16px 18px 18px; }
+  .noticia-meta { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px; }
+  .noticia-titulo { font-family: 'DM Serif Display', serif; font-size: 17px; color: var(--ink); line-height: 1.3; margin-bottom: 8px; letter-spacing: -0.3px; }
+  .noticia-texto { font-size: 13px; color: var(--ink-2); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .noticia-actions { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .btn-edit-noticia { padding: 5px 12px; background: transparent; border: 1px solid var(--border); border-radius: 5px; font-size: 11px; color: var(--ink-3); cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+  .btn-edit-noticia:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-del-noticia { padding: 5px 12px; background: transparent; border: 1px solid var(--danger-border); border-radius: 5px; font-size: 11px; color: var(--danger); cursor: pointer; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+  .btn-del-noticia:hover { background: var(--danger-light); }
+
+  /* MODAL NOTICIAS */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 500; display: flex; align-items: center; justify-content: center; animation: fadeUp 0.2s ease; }
+  .modal-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+  .modal-header { padding: 20px 24px 0; display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--ink); }
+  .modal-close { background: none; border: none; font-size: 20px; color: var(--ink-3); cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: all 0.15s; }
+  .modal-close:hover { background: var(--bg-3); color: var(--ink); }
+  .modal-body { padding: 20px 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; background: var(--surface-2); border-radius: 0 0 12px 12px; }
+
+  /* Admin gate */
+  .admin-gate { background: var(--gold-light); border: 1px solid var(--gold); border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .admin-gate-input { flex: 1; background: white; border: 1px solid var(--border); border-radius: 6px; padding: 7px 12px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--ink); outline: none; }
+  .admin-gate-input:focus { border-color: var(--gold); }
+  .admin-gate-btn { padding: 7px 14px; background: var(--gold); color: #0a0908; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; }
+
+  /* Imagen upload preview */
+  .img-upload-area { border: 2px dashed var(--border-strong); border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.15s; margin-bottom: 4px; }
+  .img-upload-area:hover { border-color: var(--gold); background: var(--gold-light); }
+  .img-upload-area.has-img { padding: 0; border-style: solid; overflow: hidden; }
+  .img-preview { width: 100%; height: 200px; object-fit: cover; display: block; }
+</style></head><body>
 <div class="header"><div><div class="brand">NormaAI FMA</div><div style="font-size:10px;color:#888;margin-top:2px">Faltas · Medidas · Acciones · ISO 9001:2015</div></div><div class="doc-meta"><div><strong>Código:</strong> ${nc.title}</div><div><strong>Fecha:</strong> ${fecha}</div><div><strong>Cláusula:</strong> ${nc.clause} · Acción correctiva 10.2</div></div></div>
 <h1>Plan de Acción Correctiva</h1><div class="subtitle">${nc.sub}</div>
 <div class="section"><div class="section-title">Datos de la No Conformidad</div><div class="info-grid"><div class="info-cell"><div class="info-label">Código</div><div class="info-value">${nc.title}</div></div><div class="info-cell"><div class="info-label">Cláusula</div><div class="info-value">${nc.clause}</div></div><div class="info-cell"><div class="info-label">Responsable</div><div class="info-value">${nc.resp}</div></div><div class="info-cell"><div class="info-label">Prioridad</div><div class="info-value">${nc.priority}</div></div></div><div class="box box-gray">${nc.desc}</div></div>
@@ -1009,6 +1152,154 @@ ${fd.cambios_sgc?`<div class="section"><div class="section-title">⑦ Cambios al
     if (btn) btn.classList.add('active');
     showView(view, null);
   }
+
+
+  // ── NOTICIAS ──────────────────────────────────────────
+  const ADMIN_PWD = 'SIGadmin2026**';
+  let isAdmin = false;
+  let noticias = [];
+  let imgBase64 = null;
+
+  function checkAdminPwd() {
+    const val = document.getElementById('admin-pwd-input').value;
+    if (val === ADMIN_PWD) {
+      isAdmin = true;
+      document.getElementById('admin-gate-noticias').style.display = 'none';
+      document.getElementById('btn-nueva-noticia').style.display = 'inline-flex';
+      showToast('Acceso admin activado', true);
+      renderNoticias();
+    } else {
+      showToast('Clave incorrecta', false);
+      document.getElementById('admin-pwd-input').value = '';
+    }
+  }
+
+  function cargarNoticias() {
+    // Por ahora desde localStorage — esta tarde lo conectamos a Supabase
+    const saved = localStorage.getItem('fma_noticias');
+    noticias = saved ? JSON.parse(saved) : [
+      { id: 'n1', titulo: 'Auditoría interna ISO 9001 — Resultados Q1 2026', fecha: '2026-04-15', texto: 'Se completó exitosamente la auditoría interna del primer trimestre. Se identificaron 2 No Conformidades menores en el área de producción, actualmente en proceso de análisis y corrección. El equipo SIG agradece la colaboración de todas las áreas.', img: '' },
+      { id: 'n2', titulo: 'Capacitación 5 Porqués — Equipos de Calidad', fecha: '2026-04-08', texto: 'Se realizó la jornada de capacitación en metodología de análisis de causa raíz mediante la técnica de los 5 Porqués. Participaron 18 personas de las áreas de producción, mantención y calidad.', img: '' }
+    ];
+    renderNoticias();
+  }
+
+  function guardarEnStorage() {
+    localStorage.setItem('fma_noticias', JSON.stringify(noticias));
+    const count = document.getElementById('noticias-count');
+    if (noticias.length > 0) { count.textContent = noticias.length; count.style.display = 'inline'; }
+    else count.style.display = 'none';
+  }
+
+  function renderNoticias() {
+    const grid = document.getElementById('noticias-grid');
+    if (noticias.length === 0) {
+      grid.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--ink-3);grid-column:1/-1"><div style="font-size:36px;margin-bottom:12px;opacity:0.3">📰</div><div style="font-size:13px">No hay noticias publicadas aún.</div></div>';
+      return;
+    }
+    const sorted = [...noticias].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+    grid.innerHTML = sorted.map(n => {
+      const fecha = new Date(n.fecha + 'T12:00:00').toLocaleDateString('es-CL', { year:'numeric', month:'long', day:'numeric' });
+      const imgHTML = n.img
+        ? `<img class="noticia-img" src="${n.img}" alt="${n.titulo}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="noticia-img-placeholder" style="display:none">📰</div>`
+        : `<div class="noticia-img-placeholder">📰</div>`;
+      const adminBtns = isAdmin ? `<div class="noticia-actions"><button class="btn-edit-noticia" onclick="editarNoticia('${n.id}')">✏️ Editar</button><button class="btn-del-noticia" onclick="eliminarNoticia('${n.id}')">🗑️ Eliminar</button></div>` : '';
+      return `<div class="noticia-card">${imgHTML}<div class="noticia-body"><div class="noticia-meta">${fecha}</div><div class="noticia-titulo">${n.titulo}</div><div class="noticia-texto">${n.texto}</div>${adminBtns}</div></div>`;
+    }).join('');
+    guardarEnStorage();
+  }
+
+  function abrirModalNoticia(id = null) {
+    document.getElementById('modal-noticia-titulo').textContent = id ? 'Editar noticia' : 'Nueva noticia';
+    document.getElementById('noticia-edit-id').value = id || '';
+    document.getElementById('noticia-titulo').value = '';
+    document.getElementById('noticia-fecha').value = new Date().toISOString().split('T')[0];
+    document.getElementById('noticia-texto').value = '';
+    document.getElementById('noticia-img-url').value = '';
+    document.getElementById('img-preview-el').style.display = 'none';
+    document.getElementById('img-upload-placeholder').style.display = 'block';
+    document.getElementById('img-upload-area').classList.remove('has-img');
+    imgBase64 = null;
+
+    if (id) {
+      const n = noticias.find(x => x.id === id);
+      if (n) {
+        document.getElementById('noticia-titulo').value = n.titulo;
+        document.getElementById('noticia-fecha').value = n.fecha;
+        document.getElementById('noticia-texto').value = n.texto;
+        if (n.img) {
+          document.getElementById('noticia-img-url').value = n.img;
+          previewImagenUrl(n.img);
+        }
+      }
+    }
+    document.getElementById('modal-noticia').style.display = 'flex';
+  }
+
+  function cerrarModalNoticia(e) {
+    if (e && e.target !== document.getElementById('modal-noticia')) return;
+    document.getElementById('modal-noticia').style.display = 'none';
+  }
+
+  function previewImagen(input) {
+    const file = input.files[0]; if (!file) return;
+    if (file.size > 2 * 1024 * 1024) { showToast('Imagen muy grande (máx 2MB)', false); return; }
+    const reader = new FileReader();
+    reader.onload = e => {
+      imgBase64 = e.target.result;
+      mostrarPreviewImg(imgBase64);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function previewImagenUrl(url) {
+    if (url && url.startsWith('http')) mostrarPreviewImg(url);
+  }
+
+  function mostrarPreviewImg(src) {
+    const el = document.getElementById('img-preview-el');
+    el.src = src; el.style.display = 'block';
+    document.getElementById('img-upload-placeholder').style.display = 'none';
+    document.getElementById('img-upload-area').classList.add('has-img');
+  }
+
+  function guardarNoticia() {
+    const titulo = document.getElementById('noticia-titulo').value.trim();
+    const fecha = document.getElementById('noticia-fecha').value;
+    const texto = document.getElementById('noticia-texto').value.trim();
+    if (!titulo || !fecha || !texto) { showToast('Completa título, fecha y contenido', false); return; }
+
+    const img = imgBase64 || document.getElementById('noticia-img-url').value.trim() || '';
+    const editId = document.getElementById('noticia-edit-id').value;
+
+    if (editId) {
+      const idx = noticias.findIndex(x => x.id === editId);
+      if (idx >= 0) noticias[idx] = { ...noticias[idx], titulo, fecha, texto, img };
+      showToast('Noticia actualizada', true);
+    } else {
+      noticias.unshift({ id: 'n' + Date.now(), titulo, fecha, texto, img });
+      showToast('Noticia publicada', true);
+    }
+
+    document.getElementById('modal-noticia').style.display = 'none';
+    renderNoticias();
+  }
+
+  function editarNoticia(id) { abrirModalNoticia(id); }
+
+  function eliminarNoticia(id) {
+    if (!confirm('¿Eliminar esta noticia?')) return;
+    noticias = noticias.filter(n => n.id !== id);
+    renderNoticias();
+    showToast('Noticia eliminada', false);
+  }
+
+  // Cargar noticias al inicio
+  document.addEventListener('DOMContentLoaded', () => {
+    cargarNoticias();
+    // Enter en admin pwd
+    document.getElementById('admin-pwd-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') checkAdminPwd(); });
+  });
 
   function showToast(msg, ok) {
     const t = document.getElementById('toast'); t.textContent = msg;
