@@ -345,6 +345,226 @@
   .img-upload-area:hover { border-color: var(--gold); background: var(--gold-light); }
   .img-upload-area.has-img { padding: 0; border-style: solid; overflow: hidden; }
   .img-preview { width: 100%; height: 200px; object-fit: cover; display: block; }
+
+  /* HERO DASHBOARD */
+  .hero-banner {
+    background: #111110;
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 28px;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    min-height: 220px;
+    position: relative;
+  }
+  .hero-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(232,169,0,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-left {
+    padding: 36px 40px;
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative; z-index: 1;
+  }
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace; font-size: 9px;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hero-eyebrow::before {
+    content: ''; width: 20px; height: 1px; background: var(--gold);
+  }
+  .hero-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px; color: #f0ead6;
+    line-height: 1.25; letter-spacing: -0.5px;
+    margin-bottom: 14px;
+  }
+  .hero-title em { color: var(--gold); font-style: normal; }
+  .hero-desc {
+    font-size: 13px; color: rgba(255,255,255,0.45);
+    line-height: 1.6; max-width: 380px;
+    margin-bottom: 20px;
+  }
+  .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .hero-btn-primary {
+    padding: 9px 18px; background: var(--gold); color: #0a0908;
+    border: none; border-radius: 7px; font-weight: 700;
+    font-family: 'DM Sans', sans-serif; font-size: 12px;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .hero-btn-primary:hover { background: var(--gold-pale); }
+  .hero-btn-ghost {
+    padding: 9px 18px; background: transparent;
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 7px;
+    color: rgba(255,255,255,0.6); font-size: 12px;
+    font-family: 'DM Sans', sans-serif; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .hero-btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+  .hero-right {
+    position: relative; background: #0a0908;
+    border-left: 1px solid rgba(255,255,255,0.06);
+  }
+  .hero-video-wrap {
+    width: 100%; height: 100%; min-height: 220px;
+    position: relative; overflow: hidden;
+  }
+  .hero-video-wrap iframe {
+    width: 100%; height: 100%; min-height: 220px;
+    border: none; display: block;
+  }
+  .hero-video-placeholder {
+    width: 100%; height: 100%; min-height: 220px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: rgba(255,255,255,0.2); gap: 10px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .hero-video-placeholder:hover { background: rgba(255,255,255,0.03); }
+  .hero-video-placeholder .play-icon {
+    width: 52px; height: 52px; border-radius: 50%;
+    border: 2px solid rgba(232,169,0,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: var(--gold);
+    transition: all 0.2s;
+  }
+  .hero-video-placeholder:hover .play-icon {
+    background: var(--gold-light); border-color: var(--gold);
+  }
+  .hero-video-label {
+    font-family: 'DM Mono', monospace; font-size: 9px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: rgba(255,255,255,0.2);
+  }
+  .hero-video-edit {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 5px; padding: 4px 10px; color: rgba(255,255,255,0.5);
+    font-size: 10px; cursor: pointer; display: none;
+    font-family: 'DM Mono', monospace; letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+  .hero-video-edit:hover { color: var(--gold); border-color: var(--gold); }
+  .hero-right:hover .hero-video-edit { display: block; }
+
+  /* MANNY TE INFORMA */
+  .mti-section { margin-bottom: 32px; }
+  .mti-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .mti-title-wrap { display: flex; align-items: center; gap: 10px; }
+  .mti-avatar {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: #111110; border: 2px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; color: var(--gold); flex-shrink: 0;
+  }
+  .mti-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px; color: var(--ink); letter-spacing: -0.3px;
+  }
+  .mti-sub { font-size: 12px; color: var(--ink-3); }
+
+  /* Cards multimedia */
+  .mti-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 18px;
+  }
+  .mti-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
+    cursor: pointer;
+  }
+  .mti-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.09); transform: translateY(-2px); }
+  .mti-card-media {
+    width: 100%; height: 170px; overflow: hidden;
+    background: #eeede9; position: relative;
+  }
+  .mti-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mti-card-media iframe { width: 100%; height: 100%; border: none; pointer-events: none; }
+  .mti-card-media .media-placeholder {
+    width: 100%; height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px; color: var(--ink-3);
+  }
+  .mti-card-media .media-placeholder .big-icon { font-size: 36px; opacity: 0.4; }
+  .mti-type-badge {
+    position: absolute; top: 10px; left: 10px;
+    font-family: 'DM Mono', monospace; font-size: 8px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px; font-weight: 500;
+  }
+  .badge-noticia { background: rgba(17,17,16,0.75); color: #f0ead6; }
+  .badge-video { background: rgba(192,57,43,0.85); color: white; }
+  .badge-podcast { background: rgba(74,157,111,0.85); color: white; }
+  .mti-card-body { padding: 14px 16px 16px; }
+  .mti-card-date {
+    font-family: 'DM Mono', monospace; font-size: 9px;
+    letter-spacing: 1px; color: var(--ink-3); margin-bottom: 6px;
+  }
+  .mti-card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px; color: var(--ink); line-height: 1.3;
+    margin-bottom: 7px; letter-spacing: -0.2px;
+  }
+  .mti-card-text {
+    font-size: 12px; color: var(--ink-2); line-height: 1.6;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .mti-card-footer {
+    display: flex; gap: 8px; margin-top: 10px;
+    padding-top: 10px; border-top: 1px solid var(--border);
+  }
+
+  /* AUDIO PLAYER */
+  .audio-player {
+    background: #111110; border-radius: 0 0 12px 12px;
+    padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+  }
+  .audio-player audio { flex: 1; height: 32px; }
+  audio::-webkit-media-controls-panel { background: #1a1916; }
+
+  /* MODAL MULTIMEDIA */
+  .mti-type-selector {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px;
+  }
+  .type-opt {
+    padding: 14px 8px; border: 2px solid var(--border); border-radius: 8px;
+    text-align: center; cursor: pointer; transition: all 0.15s;
+    font-size: 12px; color: var(--ink-2);
+  }
+  .type-opt:hover { border-color: var(--gold); color: var(--gold); }
+  .type-opt.selected { border-color: var(--gold); background: var(--gold-light); color: var(--ink); }
+  .type-opt .type-icon { font-size: 22px; margin-bottom: 6px; }
+  .type-opt .type-label { font-weight: 600; font-size: 11px; }
+
+  /* RESUMEN SISTEMA */
+  .section-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 28px 0 20px;
+  }
+  .section-divider-line { flex: 1; height: 1px; background: var(--border); }
+  .section-divider-label {
+    font-family: 'DM Mono', monospace; font-size: 9px;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--ink-3);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 768px) {
+    .hero-banner { grid-template-columns: 1fr; }
+    .hero-right { display: none; }
+    .hero-left { padding: 24px 20px; }
+    .hero-title { font-size: 22px; }
+    .mti-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -384,7 +604,7 @@
       <button class="nav-item active" onclick="showView('dashboard', this)"><span class="nav-icon">▦</span> Dashboard</button>
       <button class="nav-item" onclick="showView('lista', this)"><span class="nav-icon">≡</span> No Conformidades<span class="nav-count">3</span></button>
       <button class="nav-item" onclick="showView('documentos', this)"><span class="nav-icon">📄</span> Documentos</button>
-      <button class="nav-item" onclick="showView('noticias', this)"><span class="nav-icon">📰</span> Noticias<span class="nav-count" id="noticias-count" style="display:none">0</span></button>
+      <button class="nav-item" onclick="showView('noticias', this)"><span class="nav-icon">📰</span> Manny te informa<span class="nav-count" id="noticias-count" style="display:none">0</span></button>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Asistencia IA</div>
@@ -401,10 +621,55 @@
 
     <!-- DASHBOARD -->
     <div class="view active" id="view-dashboard">
-      <div class="page-header">
-        <div><div class="page-title">Dashboard</div><div class="page-sub">Resumen del sistema FMA · Abril 2026</div></div>
-        <button class="btn-primary" onclick="showView('nueva', document.querySelector('.nav-item'))">+ Nueva NC</button>
+
+      <!-- HERO BANNER -->
+      <div class="hero-banner">
+        <div class="hero-left">
+          <div class="hero-eyebrow">Manny · Asistente SIG</div>
+          <div class="hero-title">Bienvenido al Sistema<br>de Gestión <em>FMA Industrial</em></div>
+          <div class="hero-desc">Tu plataforma integrada para gestionar No Conformidades, análisis de causa raíz y mejora continua. ISO 9001 · 14001 · 45001.</div>
+          <div class="hero-actions">
+            <button class="hero-btn-primary" onclick="showView('nueva', document.querySelectorAll('.nav-item')[6])">+ Nueva NC</button>
+            <button class="hero-btn-ghost" onclick="showView('manny', document.querySelectorAll('.nav-item')[4])">✦ Hablar con Manny</button>
+          </div>
+        </div>
+        <div class="hero-right">
+          <div class="hero-video-wrap" id="hero-video-wrap">
+            <div class="hero-video-placeholder" id="hero-video-placeholder" onclick="isAdmin && editarVideoHero()">
+              <div class="play-icon">▶</div>
+              <div class="hero-video-label">Video de bienvenida</div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.15);margin-top:4px">(Admin: clic para configurar)</div>
+            </div>
+          </div>
+          <button class="hero-video-edit" id="hero-video-edit-btn" onclick="editarVideoHero()">✏ Cambiar video</button>
+        </div>
       </div>
+
+      <!-- MANNY TE INFORMA -->
+      <div class="mti-section">
+        <div class="mti-header">
+          <div class="mti-title-wrap">
+            <div class="mti-avatar">✦</div>
+            <div>
+              <div class="mti-title">Manny te informa</div>
+              <div class="mti-sub">Noticias · Videos · Podcasts del equipo SIG</div>
+            </div>
+          </div>
+          <button class="btn-primary" id="btn-nueva-mti" style="display:none" onclick="abrirModalMTI()">+ Publicar</button>
+        </div>
+        <div class="mti-grid" id="mti-grid">
+          <div style="text-align:center;padding:40px;color:var(--ink-3);grid-column:1/-1;font-size:13px;opacity:0.6">Cargando contenido...</div>
+        </div>
+      </div>
+
+      <!-- SEPARADOR -->
+      <div class="section-divider">
+        <div class="section-divider-line"></div>
+        <div class="section-divider-label">Resumen del sistema</div>
+        <div class="section-divider-line"></div>
+      </div>
+
+      <!-- STATS -->
       <div class="stats-row">
         <div class="stat-card"><div class="stat-label">Total NCs</div><div class="stat-value">3</div><div class="stat-delta up">↑ 1 este mes</div></div>
         <div class="stat-card"><div class="stat-label">Abiertas</div><div class="stat-value" style="color:var(--tag-open-text)">1</div><div class="stat-delta">Requieren acción</div></div>
@@ -419,6 +684,84 @@
           <tr onclick="openDetail('FMA-2026-002')"><td class="fma-code">FMA-2026-002</td><td class="fma-desc">Procedimiento de control de documentos desactualizado</td><td><span class="clause-tag">7.5</span></td><td><span class="status-tag tag-analysis"><span class="dot"></span>En análisis</span></td><td><span class="priority-tag p-media">Media</span></td><td><a class="action-link">Ver →</a></td></tr>
           <tr onclick="openDetail('FMA-2026-001')"><td class="fma-code">FMA-2026-001</td><td class="fma-desc">Encuesta de satisfacción de clientes no ejecutada en Q4 2025</td><td><span class="clause-tag">9.1.2</span></td><td><span class="status-tag tag-closed"><span class="dot"></span>Cerrada</span></td><td><span class="priority-tag p-baja">Baja</span></td><td><a class="action-link">Ver →</a></td></tr>
         </tbody></table>
+      </div>
+    </div>
+
+    <!-- MODAL NUEVA PUBLICACIÓN MTI -->
+    <div class="modal-overlay" id="modal-mti" style="display:none" onclick="cerrarModalMTI(event)">
+      <div class="modal-box">
+        <div class="modal-header">
+          <div class="modal-title" id="modal-mti-titulo">Nueva publicación</div>
+          <button class="modal-close" onclick="cerrarModalMTI()">✕</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="mti-edit-id" />
+          <div class="mti-type-selector" id="mti-type-selector">
+            <div class="type-opt selected" data-type="noticia" onclick="selectMTIType('noticia', this)">
+              <div class="type-icon">📰</div><div class="type-label">Noticia</div>
+            </div>
+            <div class="type-opt" data-type="video" onclick="selectMTIType('video', this)">
+              <div class="type-icon">▶️</div><div class="type-label">Video YouTube</div>
+            </div>
+            <div class="type-opt" data-type="podcast" onclick="selectMTIType('podcast', this)">
+              <div class="type-icon">🎙️</div><div class="type-label">Podcast / Audio</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Título *</label>
+            <input class="field-input" type="text" id="mti-titulo" placeholder="Título de la publicación..." />
+          </div>
+          <div class="form-group" style="margin-top:14px">
+            <label class="form-label">Fecha *</label>
+            <input class="field-input" type="date" id="mti-fecha" />
+          </div>
+          <!-- Campo imagen (noticia) -->
+          <div id="mti-field-img" class="form-group" style="margin-top:14px">
+            <label class="form-label">Imagen (URL)</label>
+            <input class="field-input" type="text" id="mti-img-url" placeholder="https://..." />
+          </div>
+          <!-- Campo YouTube -->
+          <div id="mti-field-yt" class="form-group" style="margin-top:14px;display:none">
+            <label class="form-label">URL de YouTube *</label>
+            <input class="field-input" type="text" id="mti-yt-url" placeholder="https://www.youtube.com/watch?v=..." />
+            <div style="font-size:10px;color:var(--ink-3);margin-top:4px">También acepta links cortos youtu.be/...</div>
+          </div>
+          <!-- Campo audio -->
+          <div id="mti-field-audio" class="form-group" style="margin-top:14px;display:none">
+            <label class="form-label">URL del audio (MP3/WAV/MP4) *</label>
+            <input class="field-input" type="text" id="mti-audio-url" placeholder="https://... o sube a Supabase Storage" />
+            <div style="font-size:10px;color:var(--ink-3);margin-top:4px">Formatos soportados: MP3, WAV, MP4, M4A, OGG</div>
+          </div>
+          <div class="form-group" style="margin-top:14px">
+            <label class="form-label">Descripción / Contenido</label>
+            <textarea class="field-textarea" rows="4" id="mti-texto" placeholder="Escribe una descripción..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-ghost" onclick="cerrarModalMTI()">Cancelar</button>
+          <button class="btn-primary" onclick="guardarMTI()">Publicar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL VIDEO HERO -->
+    <div class="modal-overlay" id="modal-hero-video" style="display:none" onclick="cerrarModalHeroVideo(event)">
+      <div class="modal-box" style="max-width:460px">
+        <div class="modal-header">
+          <div class="modal-title">Video de bienvenida</div>
+          <button class="modal-close" onclick="cerrarModalHeroVideo()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">URL de YouTube</label>
+            <input class="field-input" type="text" id="hero-yt-url" placeholder="https://www.youtube.com/watch?v=..." />
+            <div style="font-size:10px;color:var(--ink-3);margin-top:6px">Este video aparece en el banner de bienvenida del dashboard.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-ghost" onclick="cerrarModalHeroVideo()">Cancelar</button>
+          <button class="btn-primary" onclick="guardarVideoHero()">Guardar video</button>
+        </div>
       </div>
     </div>
 
@@ -1166,8 +1509,12 @@ ${fd.cambios_sgc?`<div class="section"><div class="section-title">⑦ Cambios al
       isAdmin = true;
       document.getElementById('admin-gate-noticias').style.display = 'none';
       document.getElementById('btn-nueva-noticia').style.display = 'inline-flex';
-      showToast('Acceso admin activado', true);
+      const btnMti = document.getElementById('btn-nueva-mti');
+      if (btnMti) btnMti.style.display = 'inline-flex';
+      document.getElementById('hero-video-edit-btn').style.display = 'block';
+      showToast('Acceso admin activado ✦', true);
       renderNoticias();
+      renderMTI();
     } else {
       showToast('Clave incorrecta', false);
       document.getElementById('admin-pwd-input').value = '';
@@ -1299,7 +1646,208 @@ ${fd.cambios_sgc?`<div class="section"><div class="section-title">⑦ Cambios al
     cargarNoticias();
     // Enter en admin pwd
     document.getElementById('admin-pwd-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') checkAdminPwd(); });
+    cargarMTI();
+    cargarHeroVideo();
   });
+
+
+  // ── MANNY TE INFORMA (MTI) ─────────────────────────────
+  let mtiItems = [];
+  let mtiType = 'noticia';
+
+  function selectMTIType(type, el) {
+    mtiType = type;
+    document.querySelectorAll('.type-opt').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('mti-field-img').style.display = type === 'noticia' ? 'block' : 'none';
+    document.getElementById('mti-field-yt').style.display = type === 'video' ? 'block' : 'none';
+    document.getElementById('mti-field-audio').style.display = type === 'podcast' ? 'block' : 'none';
+  }
+
+  function cargarMTI() {
+    const saved = localStorage.getItem('fma_mti');
+    mtiItems = saved ? JSON.parse(saved) : [
+      { id: 'm1', tipo: 'noticia', titulo: 'Auditoría interna Q1 2026 — Resultados', fecha: '2026-04-15', texto: 'Se completó exitosamente la auditoría interna del primer trimestre. Se identificaron 2 NCs menores en el área de producción, actualmente en análisis.', img: '', yt: '', audio: '' },
+      { id: 'm2', tipo: 'noticia', titulo: 'Capacitación 5 Porqués — Equipos de Calidad', fecha: '2026-04-08', texto: 'Jornada de capacitación en metodología de análisis de causa raíz. Participaron 18 personas de producción, mantención y calidad.', img: '', yt: '', audio: '' }
+    ];
+    renderMTI();
+  }
+
+  function guardarMTIStorage() {
+    localStorage.setItem('fma_mti', JSON.stringify(mtiItems));
+    const count = document.getElementById('noticias-count');
+    if (mtiItems.length > 0) { count.textContent = mtiItems.length; count.style.display = 'inline'; }
+    else count.style.display = 'none';
+  }
+
+  function getYTEmbed(url) {
+    if (!url) return '';
+    let id = '';
+    const m1 = url.match(/[?&]v=([^&]+)/);
+    const m2 = url.match(/youtu\.be\/([^?]+)/);
+    const m3 = url.match(/embed\/([^?]+)/);
+    if (m1) id = m1[1]; else if (m2) id = m2[1]; else if (m3) id = m3[1];
+    return id ? `https://www.youtube.com/embed/${id}?rel=0` : '';
+  }
+
+  function renderMTI() {
+    const grid = document.getElementById('mti-grid');
+    if (!grid) return;
+    if (mtiItems.length === 0) {
+      grid.innerHTML = '<div style="text-align:center;padding:48px;color:var(--ink-3);grid-column:1/-1;font-size:13px;opacity:0.6"><div style="font-size:32px;margin-bottom:10px">📰</div>No hay publicaciones aún.</div>';
+      guardarMTIStorage(); return;
+    }
+    const sorted = [...mtiItems].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+    grid.innerHTML = sorted.map(item => {
+      const fecha = new Date(item.fecha + 'T12:00:00').toLocaleDateString('es-CL', { year:'numeric', month:'long', day:'numeric' });
+      let mediaHTML = '';
+      const badgeLabel = { noticia:'Noticia', video:'Video', podcast:'Podcast' }[item.tipo];
+      const badgeClass = { noticia:'badge-noticia', video:'badge-video', podcast:'badge-podcast' }[item.tipo];
+
+      if (item.tipo === 'video' && item.yt) {
+        const embed = getYTEmbed(item.yt);
+        mediaHTML = embed
+          ? `<iframe src="${embed}" allowfullscreen></iframe>`
+          : `<div class="media-placeholder"><div class="big-icon">▶️</div></div>`;
+      } else if (item.tipo === 'podcast' && item.audio) {
+        mediaHTML = `<div class="media-placeholder" style="background:#111110"><div class="big-icon">🎙️</div><div style="font-size:11px;color:rgba(255,255,255,0.4)">Podcast</div></div>`;
+      } else if (item.img) {
+        mediaHTML = `<img src="${item.img}" alt="${item.titulo}" onerror="this.style.display='none'" />`;
+      } else {
+        const icons = { noticia:'📰', video:'▶️', podcast:'🎙️' };
+        mediaHTML = `<div class="media-placeholder"><div class="big-icon">${icons[item.tipo]||'📰'}</div></div>`;
+      }
+
+      const audioPlayer = (item.tipo === 'podcast' && item.audio)
+        ? `<div class="audio-player"><audio controls src="${item.audio}" style="flex:1;height:32px"></audio></div>` : '';
+
+      const adminBtns = isAdmin
+        ? `<div class="mti-card-footer"><button class="btn-edit-noticia" onclick="editarMTI('${item.id}')">✏️ Editar</button><button class="btn-del-noticia" onclick="eliminarMTI('${item.id}')">🗑️</button></div>` : '';
+
+      return `<div class="mti-card">
+        <div class="mti-card-media">
+          ${mediaHTML}
+          <span class="mti-type-badge ${badgeClass}">${badgeLabel}</span>
+        </div>
+        ${audioPlayer}
+        <div class="mti-card-body">
+          <div class="mti-card-date">${fecha}</div>
+          <div class="mti-card-title">${item.titulo}</div>
+          ${item.texto ? `<div class="mti-card-text">${item.texto}</div>` : ''}
+          ${adminBtns}
+        </div>
+      </div>`;
+    }).join('');
+    guardarMTIStorage();
+  }
+
+  function abrirModalMTI(id = null) {
+    document.getElementById('modal-mti-titulo').textContent = id ? 'Editar publicación' : 'Nueva publicación';
+    document.getElementById('mti-edit-id').value = id || '';
+    document.getElementById('mti-titulo').value = '';
+    document.getElementById('mti-fecha').value = new Date().toISOString().split('T')[0];
+    document.getElementById('mti-texto').value = '';
+    document.getElementById('mti-img-url').value = '';
+    document.getElementById('mti-yt-url').value = '';
+    document.getElementById('mti-audio-url').value = '';
+    selectMTIType('noticia', document.querySelector('.type-opt[data-type="noticia"]'));
+
+    if (id) {
+      const item = mtiItems.find(x => x.id === id);
+      if (item) {
+        document.getElementById('mti-titulo').value = item.titulo;
+        document.getElementById('mti-fecha').value = item.fecha;
+        document.getElementById('mti-texto').value = item.texto || '';
+        document.getElementById('mti-img-url').value = item.img || '';
+        document.getElementById('mti-yt-url').value = item.yt || '';
+        document.getElementById('mti-audio-url').value = item.audio || '';
+        const el = document.querySelector(`.type-opt[data-type="${item.tipo}"]`);
+        if (el) selectMTIType(item.tipo, el);
+      }
+    }
+    document.getElementById('modal-mti').style.display = 'flex';
+  }
+
+  function cerrarModalMTI(e) {
+    if (e && e.target !== document.getElementById('modal-mti')) return;
+    document.getElementById('modal-mti').style.display = 'none';
+  }
+
+  function guardarMTI() {
+    const titulo = document.getElementById('mti-titulo').value.trim();
+    const fecha = document.getElementById('mti-fecha').value;
+    if (!titulo || !fecha) { showToast('Completa título y fecha', false); return; }
+    const texto = document.getElementById('mti-texto').value.trim();
+    const img = document.getElementById('mti-img-url').value.trim();
+    const yt = document.getElementById('mti-yt-url').value.trim();
+    const audio = document.getElementById('mti-audio-url').value.trim();
+    const editId = document.getElementById('mti-edit-id').value;
+
+    const item = { tipo: mtiType, titulo, fecha, texto, img, yt, audio };
+    if (editId) {
+      const idx = mtiItems.findIndex(x => x.id === editId);
+      if (idx >= 0) mtiItems[idx] = { ...mtiItems[idx], ...item };
+      showToast('Publicación actualizada', true);
+    } else {
+      mtiItems.unshift({ id: 'm' + Date.now(), ...item });
+      showToast('Publicación publicada ✦', true);
+    }
+    document.getElementById('modal-mti').style.display = 'none';
+    renderMTI();
+  }
+
+  function editarMTI(id) { abrirModalMTI(id); }
+  function eliminarMTI(id) {
+    if (!confirm('¿Eliminar esta publicación?')) return;
+    mtiItems = mtiItems.filter(x => x.id !== id);
+    renderMTI();
+    showToast('Eliminado', false);
+  }
+
+  // ── HERO VIDEO ──────────────────────────────────────────
+  function cargarHeroVideo() {
+    const saved = localStorage.getItem('fma_hero_video');
+    if (saved) actualizarHeroVideo(saved);
+  }
+
+  function editarVideoHero() {
+    if (!isAdmin) return;
+    const saved = localStorage.getItem('fma_hero_video') || '';
+    document.getElementById('hero-yt-url').value = saved;
+    document.getElementById('modal-hero-video').style.display = 'flex';
+  }
+
+  function cerrarModalHeroVideo(e) {
+    if (e && e.target !== document.getElementById('modal-hero-video')) return;
+    document.getElementById('modal-hero-video').style.display = 'none';
+  }
+
+  function guardarVideoHero() {
+    const url = document.getElementById('hero-yt-url').value.trim();
+    localStorage.setItem('fma_hero_video', url);
+    actualizarHeroVideo(url);
+    document.getElementById('modal-hero-video').style.display = 'none';
+    showToast('Video de bienvenida actualizado', true);
+  }
+
+  function actualizarHeroVideo(url) {
+    const embed = getYTEmbed(url);
+    const wrap = document.getElementById('hero-video-wrap');
+    if (!wrap) return;
+    if (embed) {
+      wrap.innerHTML = `<iframe src="${embed}?autoplay=0&rel=0" allowfullscreen style="width:100%;height:100%;min-height:220px;border:none"></iframe>`;
+    } else {
+      wrap.innerHTML = `<div class="hero-video-placeholder" id="hero-video-placeholder" onclick="isAdmin && editarVideoHero()">
+        <div class="play-icon">▶</div>
+        <div class="hero-video-label">Video de bienvenida</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.15);margin-top:4px">(Admin: clic para configurar)</div>
+      </div>`;
+    }
+  }
+
+  // Override checkAdminPwd para activar MTI también
+  const _origCheckAdmin = checkAdminPwd;
+  // Reinicializar con lógica extendida
 
   function showToast(msg, ok) {
     const t = document.getElementById('toast'); t.textContent = msg;
