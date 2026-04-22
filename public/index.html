@@ -898,6 +898,71 @@
   }
   .topbar-user:hover { border-color: var(--gold); color: var(--gold); }
   .topbar-user-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
+
+  /* ── MANNY CON HISTORIAL ───────────────────────────── */
+  .manny-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 16px;
+    align-items: start;
+    height: calc(100vh - 140px);
+  }
+  .manny-sidebar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+    display: flex; flex-direction: column;
+    height: 100%;
+  }
+  .manny-sidebar-header {
+    padding: 14px 16px; border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .manny-sidebar-title {
+    font-family: 'DM Mono', monospace; font-size: 9px;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--ink-3);
+  }
+  .btn-nueva-conv {
+    width: 26px; height: 26px; border-radius: 5px;
+    background: var(--gold); color: #0a0908; border: none;
+    font-size: 16px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center;
+    font-weight: 700; transition: background 0.15s;
+  }
+  .btn-nueva-conv:hover { background: var(--gold-pale); }
+  .manny-conv-list {
+    flex: 1; overflow-y: auto; padding: 8px;
+  }
+  .conv-item {
+    padding: 10px 12px; border-radius: 7px; cursor: pointer;
+    transition: background 0.15s; margin-bottom: 4px;
+    border: 1px solid transparent;
+  }
+  .conv-item:hover { background: var(--gold-light); border-color: var(--border); }
+  .conv-item.active { background: var(--gold-light); border-color: var(--gold); }
+  .conv-item-titulo {
+    font-size: 12px; font-weight: 500; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 3px;
+  }
+  .conv-item-fecha {
+    font-family: 'DM Mono', monospace; font-size: 9px; color: var(--ink-3);
+  }
+  .conv-empty {
+    padding: 24px 12px; text-align: center;
+    font-size: 12px; color: var(--ink-3);
+  }
+  .manny-panel {
+    height: 100%; display: flex; flex-direction: column;
+    max-width: none;
+  }
+  .manny-messages {
+    flex: 1; min-height: 0; max-height: none;
+  }
+  @media (max-width: 768px) {
+    .manny-layout { grid-template-columns: 1fr; }
+    .manny-sidebar { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -1547,28 +1612,44 @@
 
     <!-- MANNY -->
     <div class="view" id="view-manny">
-      <div class="page-header">
-        <div><div class="page-title">Manny</div><div class="page-sub">Asistente conversacional del sistema FMA</div></div>
+      <div class="page-header" style="margin-bottom:12px">
+        <div><div class="page-title">Manny</div><div class="page-sub">Asistente conversacional · ISO 9001 · 14001 · 45001</div></div>
       </div>
-      <div class="manny-panel">
-        <div class="manny-header">
-          <div class="manny-avatar" style="padding:0;overflow:hidden"><img src="/images/manny.jpeg" alt="Manny" style="width:100%;height:100%;object-fit:cover;object-position:60% 20%" onerror="this.parentElement.textContent='✦'" /></div>
-          <div>
-            <div class="manny-title">Manny</div>
-            <div class="manny-sub">Asistente IA · Sistema NormaAI FMA · ISO 9001/14001/45001</div>
+      <div class="manny-layout">
+
+        <!-- SIDEBAR HISTORIAL -->
+        <div class="manny-sidebar">
+          <div class="manny-sidebar-header">
+            <span class="manny-sidebar-title">Conversaciones</span>
+            <button class="btn-nueva-conv" onclick="nuevaConversacion()" title="Nueva conversación">+</button>
           </div>
-          <div class="manny-status"><div class="manny-status-dot"></div>En línea</div>
-        </div>
-        <div class="manny-messages" id="manny-messages">
-          <div class="chat-msg ai">
-            <div class="chat-avatar">✦</div>
-            <div class="chat-bubble">Hola, soy <strong>Manny</strong> 👋<br><br>Tu asistente ISO en FMA Industrial. Puedo ayudarte con:<br><br><strong>· Análisis de NCs</strong> y acciones correctivas<br><strong>· Cláusulas ISO</strong> 9001, 14001, 45001<br><strong>· Preparación de auditorías</strong><br><strong>· Mejora continua</strong> y ciclo PHVA<br><br>¿Qué necesitas hoy?</div>
+          <div class="manny-conv-list" id="conv-list">
+            <div class="conv-empty">Sin conversaciones aún.<br>Empieza una nueva.</div>
           </div>
         </div>
-        <div class="manny-input-area">
-          <input class="manny-input" id="manny-input" placeholder="Escríbele a Manny..." />
-          <button class="manny-send" id="manny-send-btn" onclick="sendManny()">Enviar →</button>
+
+        <!-- PANEL MANNY -->
+        <div class="manny-panel">
+          <div class="manny-header">
+            <div class="manny-avatar" style="padding:0;overflow:hidden"><img src="/images/manny.jpeg" alt="Manny" style="width:100%;height:100%;object-fit:cover;object-position:60% 20%" onerror="this.parentElement.textContent='✦'" /></div>
+            <div>
+              <div class="manny-title">Manny</div>
+              <div class="manny-sub" id="manny-conv-titulo">Nueva conversación</div>
+            </div>
+            <div class="manny-status"><div class="manny-status-dot"></div>En línea</div>
+          </div>
+          <div class="manny-messages" id="manny-messages">
+            <div class="chat-msg ai" id="manny-welcome">
+              <div class="chat-avatar"><img src="/images/manny.jpeg" style="width:100%;height:100%;object-fit:cover;object-position:60% 20%;border-radius:50%" onerror="this.parentElement.textContent='✦'" /></div>
+              <div class="chat-bubble">Hola, soy <strong>Manny</strong> 👋<br><br>Tu asistente ISO en FMA Industrial. Puedo ayudarte con:<br><br><strong>· Análisis de NCs</strong> y acciones correctivas<br><strong>· Cláusulas ISO</strong> 9001, 14001, 45001<br><strong>· Preparación de auditorías</strong><br><strong>· Mejora continua</strong> y ciclo PHVA<br><br>¿Qué necesitas hoy?</div>
+            </div>
+          </div>
+          <div class="manny-input-area">
+            <input class="manny-input" id="manny-input" placeholder="Escríbele a Manny..." />
+            <button class="manny-send" id="manny-send-btn" onclick="sendManny()">Enviar →</button>
+          </div>
         </div>
+
       </div>
     </div>
 
@@ -1782,6 +1863,7 @@
       if (btnNew) btnNew.style.display = isAdmin ? 'inline-flex' : 'none';
     }
     if (name === 'dashboard') renderIndicadores();
+    if (name === 'manny') cargarConversaciones();
   }
 
   function openDetail(code) {
@@ -2704,6 +2786,151 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
   }
 
 
+  // ── HISTORIAL CONVERSACIONES MANNY ──────────────────────
+  var convActualId = null;
+  var convActualTitulo = 'Nueva conversación';
+
+  async function cargarConversaciones() {
+    var convList = document.getElementById('conv-list');
+    if (!convList) return;
+    if (!currentUser) {
+      convList.innerHTML = '<div class="conv-empty">Inicia sesión para ver tu historial.</div>';
+      return;
+    }
+    try {
+      var sb = getSupabase();
+      var result = await sb.from('conversaciones')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('updated_at', { ascending: false })
+        .limit(30);
+
+      if (!result.data || result.data.length === 0) {
+        convList.innerHTML = '<div class="conv-empty">Sin conversaciones aún.<br>Empieza una nueva.</div>';
+        return;
+      }
+
+      convList.innerHTML = result.data.map(function(conv) {
+        var fecha = new Date(conv.updated_at).toLocaleDateString('es-CL', { day:'2-digit', month:'short' });
+        var titulo = conv.titulo || 'Conversación';
+        var isActive = conv.id === convActualId ? ' active' : '';
+        return '<div class="conv-item' + isActive + '" onclick="abrirConversacion(\'' + conv.id + '\', \'' + titulo.replace(/'/g, ' ') + '\')">' +
+          '<div class="conv-item-titulo">' + titulo + '</div>' +
+          '<div class="conv-item-fecha">' + fecha + '</div>' +
+        '</div>';
+      }).join('');
+    } catch(e) {
+      console.warn('Error cargando conversaciones:', e);
+      convList.innerHTML = '<div class="conv-empty">Error al cargar historial.</div>';
+    }
+  }
+
+  async function nuevaConversacion() {
+    convActualId = null;
+    convActualTitulo = 'Nueva conversación';
+    mannyHistory = [];
+    var msgs = document.getElementById('manny-messages');
+    var sub = document.getElementById('manny-conv-titulo');
+    if (sub) sub.textContent = 'Nueva conversación';
+    if (msgs) {
+      msgs.innerHTML = '';
+      var wd = document.createElement('div');
+      wd.className = 'chat-msg ai';
+      wd.innerHTML = '<div class="chat-avatar">✦</div><div class="chat-bubble">Hola, soy <strong>Manny</strong> 👋<br><br>¿En qué trabajamos hoy?</div>';
+      msgs.appendChild(wd);
+    }
+    // Deseleccionar conversación activa
+    document.querySelectorAll('.conv-item').forEach(function(el) { el.classList.remove('active'); });
+    document.getElementById('manny-input').focus();
+  }
+
+  async function abrirConversacion(id, titulo) {
+    convActualId = id;
+    convActualTitulo = titulo;
+    mannyHistory = [];
+    var sub = document.getElementById('manny-conv-titulo');
+    if (sub) sub.textContent = titulo;
+
+    // Marcar activa
+    document.querySelectorAll('.conv-item').forEach(function(el) { el.classList.remove('active'); });
+    var item = document.querySelector('.conv-item[onclick*="' + id + '"]');
+    if (item) item.classList.add('active');
+
+    // Cargar mensajes
+    try {
+      var sb = getSupabase();
+      var result = await sb.from('mensajes')
+        .select('*')
+        .eq('conversacion_id', id)
+        .order('created_at', { ascending: true });
+
+      var msgs = document.getElementById('manny-messages');
+      if (!msgs) return;
+      msgs.innerHTML = '';
+      mannyHistory = [];
+
+      if (!result.data || result.data.length === 0) {
+        msgs.innerHTML = '<div class="conv-empty" style="text-align:center;padding:40px;color:var(--ink-3)">Conversación vacía</div>';
+        return;
+      }
+
+      result.data.forEach(function(msg) {
+        mannyHistory.push({ role: msg.rol, content: msg.contenido });
+        var div = document.createElement('div');
+        div.className = 'chat-msg ' + (msg.rol === 'user' ? 'user' : 'ai');
+        if (msg.rol === 'user') {
+          div.innerHTML = '<div class="chat-avatar">tú</div><div class="chat-bubble">' + msg.contenido + '</div>';
+        } else {
+          var ad = document.createElement('div'); ad.className = 'chat-avatar'; ad.textContent = '✦';
+          var bd = document.createElement('div'); bd.className = 'chat-bubble manny-bubble-ai'; bd.innerHTML = parseMarkdown(msg.contenido);
+          div.appendChild(ad); div.appendChild(bd);
+        }
+        msgs.appendChild(div);
+      });
+      msgs.scrollTop = msgs.scrollHeight;
+    } catch(e) {
+      console.warn('Error cargando mensajes:', e);
+    }
+  }
+
+  async function guardarMensajeSupabase(rol, contenido) {
+    if (!currentUser) return;
+    try {
+      var sb = getSupabase();
+      // Si no hay conversación activa, crear una nueva
+      if (!convActualId) {
+        var titulo = contenido.substring(0, 50) + (contenido.length > 50 ? '…' : '');
+        var convResult = await sb.from('conversaciones').insert({
+          user_id: currentUser.id,
+          titulo: titulo
+        }).select().single();
+
+        if (convResult.data) {
+          convActualId = convResult.data.id;
+          convActualTitulo = titulo;
+          var sub = document.getElementById('manny-conv-titulo');
+          if (sub) sub.textContent = titulo;
+          // Recargar lista de conversaciones
+          await cargarConversaciones();
+        }
+      } else {
+        // Actualizar updated_at
+        await sb.from('conversaciones').update({ updated_at: new Date().toISOString() }).eq('id', convActualId);
+      }
+
+      if (convActualId) {
+        await sb.from('mensajes').insert({
+          conversacion_id: convActualId,
+          rol: rol,
+          contenido: contenido
+        });
+      }
+    } catch(e) {
+      console.warn('Error guardando mensaje:', e);
+    }
+  }
+
+
 function parseMarkdown(text) {
   if (!text) return text;
   var lines = text.split('\n');
@@ -2785,6 +3012,7 @@ function inlineMd(text) {
     msgs.appendChild(userDiv);
     msgs.scrollTop = msgs.scrollHeight;
     mannyHistory.push({ role: 'user', content: text });
+    guardarMensajeSupabase('user', text);
     const btn = document.getElementById('manny-send-btn');
     btn.disabled = true; btn.textContent = '...';
     const typId = 'mt' + Date.now();
