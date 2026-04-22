@@ -3021,14 +3021,20 @@ function inlineMd(text) {
     typDiv.innerHTML = '<div class="chat-avatar">✦</div><div class="typing-dots"><div class="td"></div><div class="td"></div><div class="td"></div></div>';
     msgs.appendChild(typDiv); msgs.scrollTop = msgs.scrollHeight;
     try {
+      // Construir messages en formato Claude API
+      const messagesPayload = mannyHistory.slice(-10).map(m => ({
+        role: m.role,
+        content: m.content
+      }));
+
       const response = await fetch('/api/manny', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, history: mannyHistory.slice(-8) })
+        body: JSON.stringify({ messages: messagesPayload })
       });
       const data = await response.json();
       const tel = document.getElementById(typId); if (tel) tel.remove();
-      const raw = data.respuesta || data.mensaje || 'Sin respuesta';
+      const raw = data.reply || data.respuesta || data.mensaje || 'Sin respuesta';
       const reply = parseMarkdown(raw);
       const aiDiv = document.createElement('div');
       aiDiv.className = 'chat-msg ai';
