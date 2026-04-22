@@ -58,9 +58,21 @@ function construirContextoKB(resultados) {
 }
 
 module.exports = async (req, res) => {
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { messages } = req.body;
+  // Parsear body manualmente si viene como string
+  let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch(e) { return res.status(400).json({ error: 'Invalid JSON' }); }
+  }
+  if (!body) return res.status(400).json({ error: 'Empty body' });
+
+  const { messages } = body;
   if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: 'messages required' });
 
   try {
