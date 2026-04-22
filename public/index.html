@@ -1354,8 +1354,8 @@
         </div>
       </div>
 
-      <!-- Admin gate -->
-      <div class="admin-gate" id="admin-gate-noticias">
+      <!-- Admin gate - solo visible si no es admin -->
+      <div class="admin-gate" id="admin-gate-noticias" style="display:none">
         <span style="font-size:12px;color:var(--ink-2)">🔐 Acceso administrador SIG</span>
         <input class="admin-gate-input" type="password" id="admin-pwd-input" placeholder="Clave admin..." />
         <button class="admin-gate-btn" onclick="checkAdminPwd()">Ingresar</button>
@@ -1773,7 +1773,14 @@
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('view-' + name).classList.add('active');
     if (btn) btn.classList.add('active');
-    if (name === 'noticias') renderMTIAll();
+    if (name === 'noticias') {
+      renderMTIAll();
+      // Mostrar admin gate solo si no es admin
+      var gate = document.getElementById('admin-gate-noticias');
+      if (gate) gate.style.display = isAdmin ? 'none' : 'flex';
+      var btnNew = document.getElementById('btn-nueva-noticia');
+      if (btnNew) btnNew.style.display = isAdmin ? 'inline-flex' : 'none';
+    }
     if (name === 'dashboard') renderIndicadores();
   }
 
