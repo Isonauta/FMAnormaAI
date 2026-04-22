@@ -1663,14 +1663,22 @@
       currentUser = result.data.user;
 
       // Obtener rol desde tabla usuarios
-      var perfil = await sb.from('usuarios').select('nombre, rol').eq('auth_id', currentUser.id).single();
+      var perfil = await sb.from('usuarios').select('nombre, rol').eq('auth_id', currentUser.id).maybeSingle();
       if (perfil.data) {
-        currentUserRol = perfil.data.rol;
+        currentUserRol = perfil.data.rol || 'operador';
         var nombre = perfil.data.nombre || email.split('@')[0];
         document.getElementById('topbar-user-name').textContent = nombre;
       } else {
-        currentUserRol = 'operador';
-        document.getElementById('topbar-user-name').textContent = email.split('@')[0];
+        // Fallback: intentar por email
+        var perfilEmail = await sb.from('usuarios').select('nombre, rol').eq('email', email).maybeSingle();
+        if (perfilEmail.data) {
+          currentUserRol = perfilEmail.data.rol || 'operador';
+          var nombre2 = perfilEmail.data.nombre || email.split('@')[0];
+          document.getElementById('topbar-user-name').textContent = nombre2;
+        } else {
+          currentUserRol = 'operador';
+          document.getElementById('topbar-user-name').textContent = email.split('@')[0];
+        }
       }
 
       // Activar permisos admin si corresponde
