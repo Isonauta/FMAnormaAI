@@ -6,7 +6,7 @@ const https = require('https');
 
 const SUPABASE_URL = 'https://ejtbqmjbcozhlxscxpze.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqdGJxbWpiY296aGx4c2N4cHplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTkzMzUsImV4cCI6MjA5MjI5NTMzNX0.ZJfedmp6Lyx7xJtX9lJ9uTEGmGwSGUa5amFGwc5ZQWw';
-const VOYAGE_KEY = 'pa-eXtfuZX6sf3eKxzfImtU_2abV9U70GmNoEuMTc15Ijk';
+const VOYAGE_KEY = process.env.VOYAGE_API_KEY || 'pa-eXtfuZX6sf3eKxzfImtU_2abV9U70GmNoEuMTc15Ijk';
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 
 function httpPost(hostname, path, headers, body) {
