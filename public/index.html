@@ -607,6 +607,269 @@
     color: var(--ink-2) !important;
     max-width: 90% !important;
   }
+
+  /* ── GESTOR DOCUMENTAL ─────────────────────────────── */
+  .doc-toolbar {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .doc-search {
+    flex: 1; min-width: 200px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink);
+    outline: none; transition: border-color 0.15s;
+  }
+  .doc-search:focus { border-color: var(--gold); }
+  .doc-search::placeholder { color: var(--ink-3); }
+  .doc-filter {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px; color: var(--ink);
+    outline: none; cursor: pointer;
+  }
+
+  /* Grilla documentos */
+  .doc-grid {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+  }
+  .doc-grid-header {
+    display: grid;
+    grid-template-columns: 110px 1fr 100px 110px 44px;
+    gap: 0; background: #eeede9;
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+  }
+  .doc-grid-header > div {
+    padding: 10px 14px;
+    font-family: 'DM Mono', monospace; font-size: 9px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 400;
+  }
+  .doc-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 100px 110px 44px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s; cursor: pointer;
+    align-items: center;
+  }
+  .doc-row:last-child { border-bottom: none; }
+  .doc-row:hover { background: var(--gold-light); }
+  .doc-row > div { padding: 13px 14px; }
+  .doc-codigo {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    color: var(--gold-dark); font-weight: 500;
+  }
+  .doc-nombre { font-size: 13px; color: var(--ink); font-weight: 500; }
+  .doc-nombre-sub { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+  .doc-tipo-badge {
+    display: inline-block; font-family: 'DM Mono', monospace;
+    font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 4px; font-weight: 500;
+  }
+  .tipo-pdf { background: #fdecea; color: #b71c1c; }
+  .tipo-word { background: #e3f2fd; color: #1565c0; }
+  .tipo-excel { background: #e8f5e9; color: #2e7d52; }
+  .tipo-ppt { background: #fff3e0; color: #c05a00; }
+  .doc-fecha { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink-3); }
+  .doc-ver-btn {
+    width: 32px; height: 32px; border-radius: 6px;
+    background: var(--gold-light); border: 1px solid var(--gold);
+    color: var(--gold-dark); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; transition: all 0.15s; margin: auto;
+  }
+  .doc-ver-btn:hover { background: var(--gold); color: #0a0908; }
+
+  .doc-empty {
+    text-align: center; padding: 60px 20px; color: var(--ink-3);
+  }
+
+  /* ── PANEL VISOR LATERAL ───────────────────────────── */
+  .doc-viewer-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.3);
+    z-index: 200;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .doc-viewer-overlay.open { opacity: 1; pointer-events: all; }
+
+  .doc-viewer-panel {
+    position: fixed; top: 0; right: -55%;
+    width: 55%; height: 100vh;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    z-index: 201;
+    display: flex; flex-direction: column;
+    transition: right 0.35s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: -8px 0 40px rgba(0,0,0,0.12);
+  }
+  .doc-viewer-panel.open { right: 0; }
+
+  .doc-viewer-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+    background: #111110; flex-shrink: 0;
+  }
+  .doc-viewer-title {
+    flex: 1; font-size: 13px; font-weight: 500; color: white;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .doc-viewer-codigo {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    color: var(--gold); margin-top: 2px;
+  }
+  .doc-viewer-close {
+    width: 32px; height: 32px; border-radius: 6px;
+    background: rgba(255,255,255,0.1); border: none;
+    color: white; cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s; flex-shrink: 0;
+  }
+  .doc-viewer-close:hover { background: rgba(255,255,255,0.2); }
+
+  .doc-viewer-actions {
+    padding: 10px 16px; border-bottom: 1px solid var(--border);
+    display: flex; gap: 8px; align-items: center;
+    background: var(--surface-2); flex-shrink: 0;
+  }
+  .doc-viewer-frame {
+    flex: 1; border: none; background: #f5f5f5;
+  }
+  .doc-viewer-unsupported {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px; color: var(--ink-3); text-align: center; padding: 40px;
+  }
+  .doc-viewer-unsupported .big-icon { font-size: 48px; opacity: 0.3; }
+
+  /* Admin upload zone */
+  .doc-upload-zone {
+    border: 2px dashed var(--border-strong); border-radius: 8px;
+    padding: 20px; text-align: center; cursor: pointer;
+    transition: all 0.15s; margin-bottom: 16px;
+  }
+  .doc-upload-zone:hover { border-color: var(--gold); background: var(--gold-light); }
+  .doc-upload-zone p { font-size: 13px; color: var(--ink-3); margin-top: 6px; }
+
+  /* Modal subir documento */
+  .modal-doc-form .form-group { margin-bottom: 14px; }
+
+  @media (max-width: 768px) {
+    .doc-viewer-panel { width: 100%; right: -100%; }
+    .doc-grid-header, .doc-row {
+      grid-template-columns: 90px 1fr 80px 44px;
+    }
+    .doc-fecha { display: none; }
+    .doc-grid-header > div:nth-child(4) { display: none; }
+  }
+
+  /* ── PANEL DE INDICADORES ──────────────────────────── */
+  .indicadores-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .ind-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden;
+  }
+  .ind-card-header {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .ind-card-title {
+    font-family: 'DM Mono', monospace; font-size: 9px;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--ink-3);
+  }
+  .ind-card-body { padding: 16px; }
+
+  /* Gráfico de barras manual */
+  .bar-chart { display: flex; flex-direction: column; gap: 10px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; }
+  .bar-label {
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    color: var(--ink-3); width: 60px; flex-shrink: 0; text-align: right;
+  }
+  .bar-track {
+    flex: 1; height: 20px; background: #eeede9;
+    border-radius: 4px; overflow: hidden; position: relative;
+  }
+  .bar-fill {
+    height: 100%; border-radius: 4px;
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 6px;
+  }
+  .bar-fill span {
+    font-family: 'DM Mono', monospace; font-size: 9px;
+    font-weight: 700; color: white;
+  }
+  .bar-fill.open { background: var(--tag-open-text); }
+  .bar-fill.analysis { background: var(--gold); }
+  .bar-fill.plan { background: var(--warn); }
+  .bar-fill.closed { background: var(--success); }
+
+  /* Dona / Pie simple */
+  .donut-wrap {
+    display: flex; align-items: center; gap: 20px;
+  }
+  .donut-svg { flex-shrink: 0; }
+  .donut-legend { display: flex; flex-direction: column; gap: 8px; }
+  .donut-legend-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--ink-2);
+  }
+  .donut-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+  .donut-val {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    font-weight: 600; color: var(--ink); margin-left: auto;
+  }
+
+  /* Tendencia mensual */
+  .trend-bars { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+  .trend-col { display: flex; flex-direction: column; align-items: center; flex: 1; height: 100%; justify-content: flex-end; }
+  .trend-bar {
+    width: 100%; border-radius: 3px 3px 0 0;
+    background: var(--gold-light); border: 1px solid var(--gold);
+    transition: height 0.6s ease;
+    position: relative; min-height: 4px;
+  }
+  .trend-bar:hover { background: var(--gold); }
+  .trend-bar-val {
+    position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
+    font-family: 'DM Mono', monospace; font-size: 9px; color: var(--ink-3);
+    white-space: nowrap;
+  }
+  .trend-mes {
+    font-family: 'DM Mono', monospace; font-size: 8px;
+    color: var(--ink-3); margin-top: 4px; letter-spacing: 0.5px;
+  }
+
+  /* Alerta vencimientos */
+  .alert-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border-radius: 6px; margin-bottom: 6px;
+    font-size: 12px;
+  }
+  .alert-item.urgente { background: var(--danger-light); border: 1px solid var(--danger-border); }
+  .alert-item.proximo { background: var(--warn-light); border: 1px solid var(--warn-border); }
+  .alert-item.ok { background: var(--success-light); border: 1px solid var(--success-border); }
+  .alert-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .alert-item.urgente .alert-dot { background: var(--danger); }
+  .alert-item.proximo .alert-dot { background: var(--warn); }
+  .alert-item.ok .alert-dot { background: var(--success); }
+
+  @media (max-width: 768px) {
+    .indicadores-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -614,6 +877,7 @@
 <!-- PASSWORD GATE -->
 <div id="password-gate">
   <div class="gate-box">
+    <img src="/images/manny.jpeg" alt="Manny" style="width:80px;height:80px;object-fit:cover;object-position:60% 15%;border-radius:50%;border:2px solid var(--gold);margin:0 auto 16px;display:block" onerror="this.style.display='none'" />
     <div class="gate-brand">NormaAI <span>FMA</span></div>
     <div class="gate-sub">Faltas · Medidas · Acciones · Demo</div>
     <input class="gate-input" type="password" id="gate-input" placeholder="Clave de acceso" />
@@ -667,7 +931,7 @@
       <!-- HERO BANNER -->
       <div class="hero-banner">
         <div class="hero-left">
-          <div class="hero-eyebrow">Manny · Asistente SIG</div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px"><img src="/images/manny.jpeg" alt="Manny" style="width:52px;height:52px;object-fit:cover;object-position:60% 15%;border-radius:50%;border:2px solid var(--gold)" onerror="this.style.display='none'" /><div class="hero-eyebrow" style="margin-bottom:0">Manny · Asistente SIG</div></div>
           <div class="hero-title">Bienvenido al Sistema<br>de Gestión <em>FMA Industrial</em></div>
           <div class="hero-desc">Tu plataforma integrada para gestionar No Conformidades, análisis de causa raíz y mejora continua. ISO 9001 · 14001 · 45001.</div>
           <div class="hero-actions">
@@ -691,13 +955,16 @@
       <div class="mti-section">
         <div class="mti-header">
           <div class="mti-title-wrap">
-            <div class="mti-avatar">✦</div>
+            <div class="mti-avatar" style="padding:0;overflow:hidden"><img src="/images/manny.jpeg" alt="Manny" style="width:100%;height:100%;object-fit:cover;object-position:60% 15%" onerror="this.parentElement.textContent='✦'" /></div>
             <div>
               <div class="mti-title">Manny te informa</div>
               <div class="mti-sub">Noticias · Videos · Podcasts del equipo SIG</div>
             </div>
           </div>
-          <button class="btn-primary" id="btn-nueva-mti" style="display:none" onclick="abrirModalMTI()">+ Publicar</button>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn-ghost" onclick="showView('noticias', document.querySelectorAll('.nav-item')[3])" style="font-size:12px">Ver todas →</button>
+            <button class="btn-primary" id="btn-nueva-mti" style="display:none" onclick="abrirModalMTI()">+ Publicar</button>
+          </div>
         </div>
         <div class="mti-grid" id="mti-grid">
           <div style="text-align:center;padding:40px;color:var(--ink-3);grid-column:1/-1;font-size:13px;opacity:0.6">Cargando contenido...</div>
@@ -707,19 +974,97 @@
       <!-- SEPARADOR -->
       <div class="section-divider">
         <div class="section-divider-line"></div>
-        <div class="section-divider-label">Resumen del sistema</div>
+        <div class="section-divider-label">Panel de indicadores · SIG</div>
         <div class="section-divider-line"></div>
       </div>
 
-      <!-- STATS -->
-      <div class="stats-row">
-        <div class="stat-card"><div class="stat-label">Total NCs</div><div class="stat-value">3</div><div class="stat-delta up">↑ 1 este mes</div></div>
-        <div class="stat-card"><div class="stat-label">Abiertas</div><div class="stat-value" style="color:var(--tag-open-text)">1</div><div class="stat-delta">Requieren acción</div></div>
-        <div class="stat-card gold-accent"><div class="stat-label">En análisis IA</div><div class="stat-value" style="color:var(--gold)">1</div><div class="stat-delta">Pendiente plan</div></div>
-        <div class="stat-card"><div class="stat-label">Cerradas</div><div class="stat-value" style="color:var(--success)">1</div><div class="stat-delta down">↓ Tiempo prom. 18d</div></div>
+      <!-- STATS RÁPIDOS -->
+      <div class="stats-row" style="margin-bottom:16px">
+        <div class="stat-card"><div class="stat-label">Total NCs</div><div class="stat-value" id="ind-total">3</div><div class="stat-delta up">↑ 1 este mes</div></div>
+        <div class="stat-card"><div class="stat-label">Abiertas</div><div class="stat-value" id="ind-abiertas" style="color:var(--tag-open-text)">1</div><div class="stat-delta">Requieren acción</div></div>
+        <div class="stat-card gold-accent"><div class="stat-label">En análisis IA</div><div class="stat-value" id="ind-analisis" style="color:var(--gold)">1</div><div class="stat-delta">Pendiente plan</div></div>
+        <div class="stat-card"><div class="stat-label">Cerradas</div><div class="stat-value" id="ind-cerradas" style="color:var(--success)">1</div><div class="stat-delta down">↓ Tiempo prom. 18d</div></div>
+      </div>
+
+      <!-- GRÁFICOS -->
+      <div class="indicadores-grid">
+
+        <!-- Estado de NCs -->
+        <div class="ind-card">
+          <div class="ind-card-header">
+            <span class="ind-card-title">Estado de No Conformidades</span>
+            <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--gold)">ACTUAL</span>
+          </div>
+          <div class="ind-card-body">
+            <div class="bar-chart" id="bar-estados">
+              <div class="bar-row"><div class="bar-label">Abiertas</div><div class="bar-track"><div class="bar-fill open" style="width:33%"><span>1</span></div></div></div>
+              <div class="bar-row"><div class="bar-label">Análisis</div><div class="bar-track"><div class="bar-fill analysis" style="width:33%"><span>1</span></div></div></div>
+              <div class="bar-row"><div class="bar-label">Cerradas</div><div class="bar-track"><div class="bar-fill closed" style="width:33%"><span>1</span></div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tendencia mensual -->
+        <div class="ind-card">
+          <div class="ind-card-header">
+            <span class="ind-card-title">NCs por mes · 2026</span>
+            <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--ink-3)">TENDENCIA</span>
+          </div>
+          <div class="ind-card-body">
+            <div class="trend-bars" id="trend-bars">
+              <!-- Se renderiza con JS -->
+            </div>
+            <div style="display:flex;gap:6px;margin-top:6px" id="trend-labels"></div>
+          </div>
+        </div>
+
+        <!-- NCs por prioridad (donut) -->
+        <div class="ind-card">
+          <div class="ind-card-header">
+            <span class="ind-card-title">Distribución por prioridad</span>
+          </div>
+          <div class="ind-card-body">
+            <div class="donut-wrap">
+              <svg class="donut-svg" width="90" height="90" viewBox="0 0 90 90">
+                <circle cx="45" cy="45" r="35" fill="none" stroke="#eeede9" stroke-width="14"/>
+                <circle id="donut-alta" cx="45" cy="45" r="35" fill="none" stroke="#e07060" stroke-width="14"
+                  stroke-dasharray="73 147" stroke-dashoffset="0" transform="rotate(-90 45 45)"/>
+                <circle id="donut-media" cx="45" cy="45" r="35" fill="none" stroke="#e09030" stroke-width="14"
+                  stroke-dasharray="73 147" stroke-dashoffset="-73" transform="rotate(-90 45 45)"/>
+                <circle id="donut-baja" cx="45" cy="45" r="35" fill="none" stroke="#4a9d6f" stroke-width="14"
+                  stroke-dasharray="73 147" stroke-dashoffset="-146" transform="rotate(-90 45 45)"/>
+                <text x="45" y="49" text-anchor="middle" font-family="DM Serif Display,serif" font-size="16" fill="#1a1816" id="donut-center">3</text>
+              </svg>
+              <div class="donut-legend">
+                <div class="donut-legend-item"><div class="donut-dot" style="background:var(--tag-open-text)"></div>Alta <span class="donut-val" id="leg-alta">1</span></div>
+                <div class="donut-legend-item"><div class="donut-dot" style="background:#e09030"></div>Media <span class="donut-val" id="leg-media">1</span></div>
+                <div class="donut-legend-item"><div class="donut-dot" style="background:var(--success)"></div>Baja <span class="donut-val" id="leg-baja">1</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alertas de revisión documental -->
+        <div class="ind-card">
+          <div class="ind-card-header">
+            <span class="ind-card-title">Revisión documental · Alertas</span>
+            <span style="font-family:'DM Mono',monospace;font-size:9px;color:var(--tag-open-text)" id="alert-count"></span>
+          </div>
+          <div class="ind-card-body" id="alertas-docs">
+            <!-- Se renderiza con JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- NCs RECIENTES -->
+      <div class="section-divider" style="margin-bottom:16px">
+        <div class="section-divider-line"></div>
+        <div class="section-divider-label">No Conformidades recientes</div>
+        <div class="section-divider-line"></div>
       </div>
       <div class="table-wrap">
-        <div class="table-toolbar"><span class="table-title">No Conformidades recientes</span><button class="btn-ghost" onclick="showView('lista', document.querySelector('.nav-item'))">Ver todas →</button></div>
+        <div class="table-toolbar"><span class="table-title">Últimas NCs registradas</span><button class="btn-ghost" onclick="showView('lista', document.querySelectorAll('.nav-item')[1])">Ver todas →</button></div>
         <table><thead><tr><th>Código</th><th>Descripción</th><th>Cláusula</th><th>Estado</th><th>Prioridad</th><th></th></tr></thead>
         <tbody>
           <tr onclick="openDetail('FMA-2026-003')"><td class="fma-code">FMA-2026-003</td><td class="fma-desc">Registros de calibración sin actualizar por más de 6 meses</td><td><span class="clause-tag">7.1.5</span></td><td><span class="status-tag tag-open"><span class="dot"></span>Abierta</span></td><td><span class="priority-tag p-alta">Alta</span></td><td><a class="action-link">Analizar →</a></td></tr>
@@ -837,7 +1182,7 @@
         <div>
           <div class="ai-panel">
             <div class="ai-header">
-              <div class="ai-header-icon">✦</div>
+              <div class="ai-header-icon" style="padding:0;overflow:hidden"><img src="/images/manny.jpeg" alt="Manny" style="width:100%;height:100%;object-fit:cover;object-position:60% 15%" onerror="this.parentElement.textContent='✦'" /></div>
               <div>
                 <div class="ai-title">Análisis de Causa Raíz · 5 Porqués</div>
                 <div class="ai-sub">Cláusula 10.2 · Sistema FMA</div>
@@ -921,19 +1266,40 @@
           <div class="form-group"><label class="form-label">Descripción del hallazgo *</label><textarea class="field-textarea" rows="4" id="new-desc" placeholder="Describe con precisión qué se encontró, dónde y cuándo..."></textarea></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
             <div class="form-group"><label class="form-label">Cláusula ISO *</label>
+              <div style="display:flex;gap:8px;margin-bottom:6px">
+                <button type="button" class="norm-tab active" onclick="setNorma('9001',this)" style="flex:1;padding:6px;border:1px solid var(--gold);border-radius:6px;background:var(--gold);color:#0a0908;font-size:11px;font-weight:700;cursor:pointer">ISO 9001</button>
+                <button type="button" class="norm-tab" onclick="setNorma('14001',this)" style="flex:1;padding:6px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--ink-2);font-size:11px;cursor:pointer">ISO 14001</button>
+                <button type="button" class="norm-tab" onclick="setNorma('45001',this)" style="flex:1;padding:6px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--ink-2);font-size:11px;cursor:pointer">ISO 45001</button>
+              </div>
+              <input type="hidden" id="new-norma" value="ISO 9001" />
               <select class="field-select" id="new-clause">
                 <option value="">Seleccionar cláusula...</option>
-                <optgroup label="4 · Contexto"><option>4.1 · Comprensión del contexto</option><option>4.2 · Partes interesadas</option><option>4.3 · Alcance del SGC</option><option>4.4 · Procesos del SGC</option></optgroup>
-                <optgroup label="5 · Liderazgo"><option>5.1.1 · Liderazgo y compromiso</option><option>5.1.2 · Enfoque al cliente</option><option>5.3 · Roles y responsabilidades</option></optgroup>
-                <optgroup label="6 · Planificación"><option>6.1 · Riesgos y oportunidades</option><option>6.2 · Objetivos de calidad</option><option>6.3 · Planificación de cambios</option></optgroup>
-                <optgroup label="7 · Apoyo"><option>7.1.1 · Recursos</option><option>7.1.3 · Infraestructura</option><option>7.1.5 · Recursos de seguimiento y medición</option><option>7.2 · Competencia</option><option>7.3 · Toma de conciencia</option><option>7.4 · Comunicación</option><option>7.5.1 · Información documentada</option><option>7.5.3 · Control de información documentada</option></optgroup>
-                <optgroup label="8 · Operación"><option>8.1 · Planificación operacional</option><option>8.4 · Control de procesos externos</option><option>8.5.1 · Control de producción</option><option>8.6 · Liberación de productos</option><option>8.7 · Salidas no conformes</option></optgroup>
-                <optgroup label="9 · Evaluación"><option>9.1.1 · Seguimiento y medición</option><option>9.1.2 · Satisfacción del cliente</option><option>9.2 · Auditoría interna</option><option>9.3 · Revisión por la dirección</option></optgroup>
-                <optgroup label="10 · Mejora"><option>10.1 · Generalidades</option><option>10.2 · No conformidad y acción correctiva</option><option>10.3 · Mejora continua</option></optgroup>
               </select>
             </div>
             <div class="form-group"><label class="form-label">Prioridad *</label><select class="field-select" id="new-priority"><option>Alta</option><option selected>Media</option><option>Baja</option></select></div>
-            <div class="form-group"><label class="form-label">Responsable *</label><input class="field-input" type="text" id="new-resp" placeholder="Nombre del responsable" /></div>
+            <div class="form-group">
+              <label class="form-label">Responsable *</label>
+              <select class="field-select" id="new-resp-select" onchange="selectResponsable(this)">
+                <option value="">Seleccionar responsable...</option>
+              </select>
+              <input class="field-input" type="text" id="new-resp" placeholder="O escribe el nombre..." style="margin-top:6px" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Área / Proceso</label>
+              <select class="field-select" id="new-area">
+                <option value="">Seleccionar área...</option>
+                <option>Fabricación Santiago</option>
+                <option>Fabricación Antofagasta</option>
+                <option>Bodega y Despacho</option>
+                <option>Diseño e Ingeniería</option>
+                <option>Post Venta / Terreno</option>
+                <option>Calidad</option>
+                <option>Seguridad y Salud</option>
+                <option>Medio Ambiente</option>
+                <option>Administración</option>
+                <option>Comercial / Ventas</option>
+              </select>
+            </div>
             <div class="form-group"><label class="form-label">Fecha límite</label><input class="field-input" type="date" id="new-date" /></div>
           </div>
           <div class="form-group"><label class="form-label">Evidencia / observación adicional</label><textarea class="field-textarea" rows="2" placeholder="Documentos, fotos, registros relacionados..."></textarea></div>
@@ -946,26 +1312,28 @@
     </div>
 
 
-    <!-- NOTICIAS -->
+    <!-- NOTICIAS / MANNY TE INFORMA COMPLETO -->
     <div class="view" id="view-noticias">
       <div class="page-header">
-        <div><div class="page-title">Noticias del SIG</div><div class="page-sub">Comunicaciones internas del Sistema de Gestión</div></div>
-        <button class="btn-primary" id="btn-nueva-noticia" style="display:none" onclick="abrirModalNoticia()">+ Nueva noticia</button>
+        <div>
+          <div class="page-title">Manny te informa</div>
+          <div class="page-sub">Todas las noticias · Videos · Podcasts del equipo SIG</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-primary" id="btn-nueva-noticia" style="display:none" onclick="abrirModalMTI()">+ Publicar</button>
+        </div>
       </div>
 
-      <!-- Admin gate (visible solo cuando no está autenticado como admin) -->
+      <!-- Admin gate -->
       <div class="admin-gate" id="admin-gate-noticias">
         <span style="font-size:12px;color:var(--ink-2)">🔐 Acceso administrador SIG</span>
         <input class="admin-gate-input" type="password" id="admin-pwd-input" placeholder="Clave admin..." />
         <button class="admin-gate-btn" onclick="checkAdminPwd()">Ingresar</button>
       </div>
 
-      <!-- Grid de noticias -->
-      <div class="noticias-grid" id="noticias-grid">
-        <div style="text-align:center;padding:60px 20px;color:var(--ink-3);grid-column:1/-1">
-          <div style="font-size:36px;margin-bottom:12px;opacity:0.3">📰</div>
-          <div style="font-size:13px">Cargando noticias...</div>
-        </div>
+      <!-- Grid completo sin límite -->
+      <div class="mti-grid" id="mti-grid-all">
+        <div style="text-align:center;padding:48px;color:var(--ink-3);grid-column:1/-1;font-size:13px;opacity:0.6">Cargando...</div>
       </div>
     </div>
 
@@ -1014,13 +1382,136 @@
     <!-- DOCUMENTOS -->
     <div class="view" id="view-documentos">
       <div class="page-header">
-        <div><div class="page-title">Documentos</div><div class="page-sub">Gestión documental del sistema FMA</div></div>
-        <button class="btn-primary">+ Nuevo documento</button>
+        <div>
+          <div class="page-title">Biblioteca Documental</div>
+          <div class="page-sub">Procedimientos · Manuales · Instructivos · Registros</div>
+        </div>
+        <button class="btn-primary" id="btn-subir-doc" style="display:none" onclick="abrirModalDoc()">+ Subir documento</button>
       </div>
-      <div class="empty-state">
-        <div class="empty-icon">📄</div>
-        <div class="empty-title">Repositorio documental</div>
-        <div class="empty-sub">Los documentos vinculados a las NC aparecerán aquí.<br>Conecta con Supabase normaai-fma para activar.</div>
+
+      <!-- Barra de búsqueda y filtros -->
+      <div class="doc-toolbar">
+        <input class="doc-search" type="text" id="doc-search-input" placeholder="🔍  Buscar por código, nombre o descripción..." oninput="filtrarDocs()" />
+        <select class="doc-filter" id="doc-filter-tipo" onchange="filtrarDocs()">
+          <option value="">Todos los tipos</option>
+          <option value="Procedimiento">Procedimientos</option>
+          <option value="Manual">Manuales</option>
+          <option value="Instructivo">Instructivos</option>
+          <option value="Registro">Registros</option>
+          <option value="Norma">Normas</option>
+        </select>
+        <select class="doc-filter" id="doc-filter-norma" onchange="filtrarDocs()">
+          <option value="">Todas las normas</option>
+          <option value="ISO 9001">ISO 9001</option>
+          <option value="ISO 14001">ISO 14001</option>
+          <option value="ISO 45001">ISO 45001</option>
+          <option value="General">General</option>
+        </select>
+      </div>
+
+      <!-- Grilla documentos -->
+      <div class="doc-grid">
+        <div class="doc-grid-header">
+          <div>Código</div>
+          <div>Nombre del documento</div>
+          <div>Tipo</div>
+          <div>Última revisión</div>
+          <div></div>
+        </div>
+        <div id="doc-list-body">
+          <div class="doc-empty">
+            <div style="font-size:32px;margin-bottom:10px;opacity:0.3">📄</div>
+            <div style="font-size:13px">Cargando documentos...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISOR LATERAL -->
+    <div class="doc-viewer-overlay" id="doc-viewer-overlay" onclick="cerrarVisor()"></div>
+    <div class="doc-viewer-panel" id="doc-viewer-panel">
+      <div class="doc-viewer-header">
+        <div style="flex:1">
+          <div class="doc-viewer-title" id="viewer-title">Documento</div>
+          <div class="doc-viewer-codigo" id="viewer-codigo"></div>
+        </div>
+        <button class="doc-viewer-close" onclick="cerrarVisor()">✕</button>
+      </div>
+      <div class="doc-viewer-actions">
+        <a id="viewer-download-btn" href="#" download class="btn-ghost" style="font-size:12px;padding:6px 12px;text-decoration:none">↓ Descargar</a>
+        <span style="font-size:11px;color:var(--ink-3)" id="viewer-meta"></span>
+      </div>
+      <iframe class="doc-viewer-frame" id="doc-viewer-frame" src="about:blank"></iframe>
+      <div class="doc-viewer-unsupported" id="viewer-unsupported" style="display:none">
+        <div class="big-icon">📄</div>
+        <div style="font-size:14px;font-weight:500;color:var(--ink-2)">Vista previa no disponible</div>
+        <div style="font-size:12px">Este formato no soporta previsualización en línea.</div>
+        <a id="viewer-open-btn" href="#" target="_blank" class="btn-primary" style="margin-top:8px;text-decoration:none;padding:10px 20px">Abrir en nueva pestaña</a>
+      </div>
+    </div>
+
+    <!-- MODAL SUBIR DOCUMENTO (solo admin) -->
+    <div class="modal-overlay" id="modal-doc" style="display:none" onclick="cerrarModalDoc(event)">
+      <div class="modal-box modal-doc-form">
+        <div class="modal-header">
+          <div class="modal-title" id="modal-doc-titulo">Subir documento</div>
+          <button class="modal-close" onclick="cerrarModalDoc()">✕</button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="doc-edit-id" />
+          <div class="form-group">
+            <label class="form-label">Código *</label>
+            <input class="field-input" type="text" id="doc-codigo-input" placeholder="Ej: PGI-11, MN-01, IT-05..." />
+          </div>
+          <div class="form-group" style="margin-top:12px">
+            <label class="form-label">Nombre del documento *</label>
+            <input class="field-input" type="text" id="doc-nombre-input" placeholder="Nombre completo del documento..." />
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+            <div class="form-group">
+              <label class="form-label">Tipo *</label>
+              <select class="field-select" id="doc-tipo-input">
+                <option>Procedimiento</option>
+                <option>Manual</option>
+                <option>Instructivo</option>
+                <option>Registro</option>
+                <option>Norma</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Norma</label>
+              <select class="field-select" id="doc-norma-input">
+                <option>ISO 9001</option>
+                <option>ISO 14001</option>
+                <option>ISO 45001</option>
+                <option>General</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+            <div class="form-group">
+              <label class="form-label">Versión / Revisión</label>
+              <input class="field-input" type="text" id="doc-version-input" placeholder="v1.0, Rev.3..." />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Fecha de revisión</label>
+              <input class="field-input" type="date" id="doc-fecha-input" />
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:12px">
+            <label class="form-label">Descripción breve</label>
+            <textarea class="field-textarea" rows="2" id="doc-desc-input" placeholder="¿De qué trata este documento?"></textarea>
+          </div>
+          <div class="form-group" style="margin-top:12px">
+            <label class="form-label">URL del documento *</label>
+            <input class="field-input" type="text" id="doc-url-input" placeholder="https://... (Supabase Storage, Google Drive, SharePoint...)" />
+            <div style="font-size:10px;color:var(--ink-3);margin-top:4px">Pega la URL pública del archivo. Soporta PDF, Word, Excel, PowerPoint.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-ghost" onclick="cerrarModalDoc()">Cancelar</button>
+          <button class="btn-primary" onclick="guardarDoc()">Guardar documento</button>
+        </div>
       </div>
     </div>
 
@@ -1031,7 +1522,7 @@
       </div>
       <div class="manny-panel">
         <div class="manny-header">
-          <div class="manny-avatar">✦</div>
+          <div class="manny-avatar" style="padding:0;overflow:hidden"><img src="/images/manny.jpeg" alt="Manny" style="width:100%;height:100%;object-fit:cover;object-position:60% 20%" onerror="this.parentElement.textContent='✦'" /></div>
           <div>
             <div class="manny-title">Manny</div>
             <div class="manny-sub">Asistente IA · Sistema NormaAI FMA · ISO 9001/14001/45001</div>
@@ -1092,6 +1583,9 @@
       if (btnMti) btnMti.style.display = 'inline-flex';
       var heroEdit = document.getElementById('hero-video-edit-btn');
       if (heroEdit) heroEdit.style.display = 'block';
+      var btnDoc = document.getElementById('btn-subir-doc');
+      if (btnDoc) btnDoc.style.display = 'inline-flex';
+      renderDocumentos();
       showToast('Acceso admin activado ✦', true);
       renderMTI();
     } else {
@@ -1122,6 +1616,10 @@
     if (typeof cargarMTI === 'function') cargarMTI();
     if (typeof cargarHeroVideo === 'function') cargarHeroVideo();
     if (typeof cargarNoticias === 'function') cargarNoticias();
+    if (typeof cargarDocumentos === 'function') cargarDocumentos();
+    if (typeof actualizarClausulas === 'function') actualizarClausulas();
+    if (typeof renderIndicadores === 'function') setTimeout(renderIndicadores, 100);
+    if (typeof cargarUsuariosSelect === 'function') cargarUsuariosSelect();
   });
 
   const fmas = {
@@ -1140,6 +1638,8 @@
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.getElementById('view-' + name).classList.add('active');
     if (btn) btn.classList.add('active');
+    if (name === 'noticias') renderMTIAll();
+    if (name === 'dashboard') renderIndicadores();
   }
 
   function openDetail(code) {
@@ -1461,7 +1961,7 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
       { id: 'm1', tipo: 'noticia', titulo: 'Auditoría interna Q1 2026 — Resultados', fecha: '2026-04-15', texto: 'Se completó exitosamente la auditoría interna del primer trimestre. Se identificaron 2 NCs menores en el área de producción, actualmente en análisis.', img: '', yt: '', audio: '' },
       { id: 'm2', tipo: 'noticia', titulo: 'Capacitación 5 Porqués — Equipos de Calidad', fecha: '2026-04-08', texto: 'Jornada de capacitación en metodología de análisis de causa raíz. Participaron 18 personas de producción, mantención y calidad.', img: '', yt: '', audio: '' }
     ];
-    renderMTI();
+    renderMTI(3);
   }
 
   function guardarMTIStorage() {
@@ -1483,7 +1983,7 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     return id ? 'https://www.youtube.com/embed/' + id + '?rel=0' : '';
   }
 
-  function renderMTI() {
+  function renderMTI(limite) {
     var grid = document.getElementById('mti-grid');
     if (!grid) return;
     if (mtiItems.length === 0) {
@@ -1491,6 +1991,7 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
       guardarMTIStorage(); return;
     }
     var sorted = mtiItems.slice().sort(function(a,b) { return new Date(b.fecha) - new Date(a.fecha); });
+    if (limite) sorted = sorted.slice(0, limite);
     var html = '';
     sorted.forEach(function(item) {
       var fecha = new Date(item.fecha + 'T12:00:00').toLocaleDateString('es-CL', { year:'numeric', month:'long', day:'numeric' });
@@ -1611,6 +2112,452 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     if (!wrap) return;
     if (embed) {
       wrap.innerHTML = '<iframe src="' + embed + '?autoplay=0&rel=0" allowfullscreen style="width:100%;height:100%;min-height:220px;border:none"></iframe>';
+    }
+  }
+
+
+  // ── GESTOR DOCUMENTAL ───────────────────────────────────
+  var documentosFMA = [];
+  var documentosFiltrados = [];
+
+  function cargarDocumentos() {
+    var saved = localStorage.getItem('fma_documentos');
+    documentosFMA = saved ? JSON.parse(saved) : [
+      { id: 'd1', codigo: 'PGI-11', nombre: 'Fabricación Santiago', tipo: 'Procedimiento', norma: 'ISO 9001', version: 'v3.0', fecha: '2026-03-15', desc: 'Proceso de fabricación en planta Santiago: OT, planos, calidad y despacho.', url: '' },
+      { id: 'd2', codigo: 'PGI-22', nombre: 'Fabricación Antofagasta', tipo: 'Procedimiento', norma: 'ISO 9001', version: 'v2.1', fecha: '2026-02-10', desc: 'Proceso de fabricación en sucursal Antofagasta, diseño local y liberación.', url: '' },
+      { id: 'd3', codigo: 'PGI-09', nombre: 'Trabajo en Terreno', tipo: 'Procedimiento', norma: 'ISO 9001', version: 'v2.0', fecha: '2025-11-20', desc: 'Protocolo para trabajo en terreno con clientes: preparación, HCR y cierre.', url: '' },
+      { id: 'd4', codigo: 'PGI-14', nombre: 'Bodega y Despacho', tipo: 'Procedimiento', norma: 'ISO 9001', version: 'v1.5', fecha: '2025-10-05', desc: 'Control de bodega, guías de consumo y despacho de productos terminados.', url: '' },
+      { id: 'd5', codigo: 'MN-01', nombre: 'Manual de Calidad', tipo: 'Manual', norma: 'ISO 9001', version: 'v4.0', fecha: '2026-01-08', desc: 'Manual del Sistema de Gestión de Calidad de FMA Industrial SpA.', url: '' }
+    ];
+    documentosFiltrados = documentosFMA.slice();
+    renderDocumentos();
+  }
+
+  function guardarDocStorage() {
+    localStorage.setItem('fma_documentos', JSON.stringify(documentosFMA));
+  }
+
+  function getTipoBadge(tipo) {
+    var map = { 'Procedimiento': 'tipo-pdf', 'Manual': 'tipo-word', 'Instructivo': 'tipo-word', 'Registro': 'tipo-excel', 'Norma': 'tipo-ppt' };
+    return map[tipo] || 'tipo-pdf';
+  }
+
+  function getTipoIcon(tipo) {
+    var map = { 'Procedimiento': '📋', 'Manual': '📖', 'Instructivo': '📝', 'Registro': '📊', 'Norma': '⚖️' };
+    return map[tipo] || '📄';
+  }
+
+  function renderDocumentos() {
+    var body = document.getElementById('doc-list-body');
+    if (!body) return;
+    if (documentosFiltrados.length === 0) {
+      body.innerHTML = '<div class="doc-empty"><div style="font-size:32px;margin-bottom:10px;opacity:0.3">🔍</div><div style="font-size:13px">No se encontraron documentos.</div></div>';
+      return;
+    }
+    var html = '';
+    documentosFiltrados.forEach(function(doc) {
+      var fecha = doc.fecha ? new Date(doc.fecha + 'T12:00:00').toLocaleDateString('es-CL', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+      var adminBtns = isAdmin ? '<button class="btn-ghost" style="font-size:10px;padding:3px 8px;margin-top:4px" onclick="event.stopPropagation();editarDoc(\'' + doc.id + '\')">✏️</button> <button style="font-size:10px;padding:3px 8px;margin-top:4px;background:transparent;border:1px solid var(--danger-border);border-radius:5px;color:var(--danger);cursor:pointer" onclick="event.stopPropagation();eliminarDoc(\'' + doc.id + '\')">🗑️</button>' : '';
+      html += '<div class="doc-row" onclick="abrirVisor(\'' + doc.id + '\')">' +
+        '<div class="doc-codigo">' + doc.codigo + '</div>' +
+        '<div><div class="doc-nombre">' + getTipoIcon(doc.tipo) + ' ' + doc.nombre + '</div>' +
+          '<div class="doc-nombre-sub">' + (doc.desc ? doc.desc.substring(0,60) + (doc.desc.length>60?'…':'') : '') + '</div>' +
+          (adminBtns ? '<div style="margin-top:4px">' + adminBtns + '</div>' : '') +
+        '</div>' +
+        '<div><span class="doc-tipo-badge ' + getTipoBadge(doc.tipo) + '">' + doc.tipo + '</span><br><span style="font-family:monospace;font-size:9px;color:var(--ink-3)">' + (doc.norma||'') + '</span></div>' +
+        '<div class="doc-fecha">' + (doc.version||'') + '<br>' + fecha + '</div>' +
+        '<div><button class="doc-ver-btn" onclick="event.stopPropagation();abrirVisor(\'' + doc.id + '\')" >👁</button></div>' +
+      '</div>';
+    });
+    body.innerHTML = html;
+  }
+
+  function filtrarDocs() {
+    var q = (document.getElementById('doc-search-input').value || '').toLowerCase();
+    var tipo = document.getElementById('doc-filter-tipo').value;
+    var norma = document.getElementById('doc-filter-norma').value;
+    documentosFiltrados = documentosFMA.filter(function(d) {
+      var matchQ = !q || d.codigo.toLowerCase().includes(q) || d.nombre.toLowerCase().includes(q) || (d.desc||'').toLowerCase().includes(q);
+      var matchTipo = !tipo || d.tipo === tipo;
+      var matchNorma = !norma || d.norma === norma;
+      return matchQ && matchTipo && matchNorma;
+    });
+    renderDocumentos();
+  }
+
+  function abrirVisor(id) {
+    var doc = documentosFMA.find(function(d) { return d.id === id; });
+    if (!doc) return;
+
+    document.getElementById('viewer-title').textContent = doc.nombre;
+    document.getElementById('viewer-codigo').textContent = doc.codigo + (doc.version ? ' · ' + doc.version : '') + (doc.norma ? ' · ' + doc.norma : '');
+    document.getElementById('viewer-meta').textContent = doc.tipo + (doc.fecha ? ' · Revisado: ' + doc.fecha : '');
+
+    var frame = document.getElementById('doc-viewer-frame');
+    var unsupported = document.getElementById('viewer-unsupported');
+    var downloadBtn = document.getElementById('viewer-download-btn');
+    var openBtn = document.getElementById('viewer-open-btn');
+
+    if (doc.url) {
+      downloadBtn.href = doc.url;
+      downloadBtn.style.display = 'inline-flex';
+      if (openBtn) openBtn.href = doc.url;
+
+      var ext = doc.url.split('.').pop().toLowerCase().split('?')[0];
+      var isPdf = ext === 'pdf';
+      var isOffice = ['docx','doc','xlsx','xls','pptx','ppt'].includes(ext);
+
+      if (isPdf) {
+        frame.src = doc.url;
+        frame.style.display = 'block';
+        unsupported.style.display = 'none';
+      } else if (isOffice) {
+        // Google Docs Viewer para Office
+        var viewerUrl = 'https://docs.google.com/gview?url=' + encodeURIComponent(doc.url) + '&embedded=true';
+        frame.src = viewerUrl;
+        frame.style.display = 'block';
+        unsupported.style.display = 'none';
+      } else {
+        frame.src = 'about:blank';
+        frame.style.display = 'none';
+        unsupported.style.display = 'flex';
+      }
+    } else {
+      frame.src = 'about:blank';
+      frame.style.display = 'none';
+      unsupported.style.display = 'flex';
+      downloadBtn.style.display = 'none';
+      document.getElementById('viewer-unsupported').innerHTML = '<div class="big-icon">📄</div><div style="font-size:14px;font-weight:500;color:var(--ink-2)">' + doc.nombre + '</div><div style="font-size:12px;margin-top:6px">' + (doc.desc||'') + '</div><div style="font-size:11px;color:var(--ink-3);margin-top:12px">📌 El documento aún no tiene URL asignada.<br>El administrador debe subir el archivo.</div>';
+    }
+
+    document.getElementById('doc-viewer-overlay').classList.add('open');
+    document.getElementById('doc-viewer-panel').classList.add('open');
+  }
+
+  function cerrarVisor() {
+    document.getElementById('doc-viewer-overlay').classList.remove('open');
+    document.getElementById('doc-viewer-panel').classList.remove('open');
+    setTimeout(function() {
+      document.getElementById('doc-viewer-frame').src = 'about:blank';
+    }, 350);
+  }
+
+  // Cerrar visor con Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') cerrarVisor();
+  });
+
+  function abrirModalDoc(id) {
+    id = id || null;
+    document.getElementById('modal-doc-titulo').textContent = id ? 'Editar documento' : 'Subir documento';
+    document.getElementById('doc-edit-id').value = id || '';
+    if (id) {
+      var doc = documentosFMA.find(function(d) { return d.id === id; });
+      if (doc) {
+        document.getElementById('doc-codigo-input').value = doc.codigo || '';
+        document.getElementById('doc-nombre-input').value = doc.nombre || '';
+        document.getElementById('doc-tipo-input').value = doc.tipo || 'Procedimiento';
+        document.getElementById('doc-norma-input').value = doc.norma || 'ISO 9001';
+        document.getElementById('doc-version-input').value = doc.version || '';
+        document.getElementById('doc-fecha-input').value = doc.fecha || '';
+        document.getElementById('doc-desc-input').value = doc.desc || '';
+        document.getElementById('doc-url-input').value = doc.url || '';
+      }
+    } else {
+      document.getElementById('doc-codigo-input').value = '';
+      document.getElementById('doc-nombre-input').value = '';
+      document.getElementById('doc-version-input').value = '';
+      document.getElementById('doc-fecha-input').value = new Date().toISOString().split('T')[0];
+      document.getElementById('doc-desc-input').value = '';
+      document.getElementById('doc-url-input').value = '';
+    }
+    document.getElementById('modal-doc').style.display = 'flex';
+  }
+
+  function cerrarModalDoc(e) {
+    if (e && e.target !== document.getElementById('modal-doc')) return;
+    document.getElementById('modal-doc').style.display = 'none';
+  }
+
+  function guardarDoc() {
+    var codigo = document.getElementById('doc-codigo-input').value.trim();
+    var nombre = document.getElementById('doc-nombre-input').value.trim();
+    var url = document.getElementById('doc-url-input').value.trim();
+    if (!codigo || !nombre) { showToast('Completa código y nombre', false); return; }
+    var doc = {
+      codigo: codigo, nombre: nombre,
+      tipo: document.getElementById('doc-tipo-input').value,
+      norma: document.getElementById('doc-norma-input').value,
+      version: document.getElementById('doc-version-input').value.trim(),
+      fecha: document.getElementById('doc-fecha-input').value,
+      desc: document.getElementById('doc-desc-input').value.trim(),
+      url: url
+    };
+    var editId = document.getElementById('doc-edit-id').value;
+    if (editId) {
+      var idx = documentosFMA.findIndex(function(d) { return d.id === editId; });
+      if (idx >= 0) documentosFMA[idx] = Object.assign(documentosFMA[idx], doc);
+      showToast('Documento actualizado', true);
+    } else {
+      doc.id = 'doc' + Date.now();
+      documentosFMA.unshift(doc);
+      showToast('Documento agregado', true);
+    }
+    document.getElementById('modal-doc').style.display = 'none';
+    guardarDocStorage();
+    filtrarDocs();
+  }
+
+  function editarDoc(id) { abrirModalDoc(id); }
+
+  function eliminarDoc(id) {
+    if (!confirm('¿Eliminar este documento del sistema?')) return;
+    documentosFMA = documentosFMA.filter(function(d) { return d.id !== id; });
+    guardarDocStorage();
+    filtrarDocs();
+    showToast('Documento eliminado', false);
+  }
+
+
+  function renderMTIAll() {
+    var grid = document.getElementById('mti-grid-all');
+    if (!grid) return;
+    if (mtiItems.length === 0) {
+      grid.innerHTML = '<div style="text-align:center;padding:48px;color:var(--ink-3);grid-column:1/-1;font-size:13px;opacity:0.6"><div style="font-size:32px;margin-bottom:10px">📰</div>No hay publicaciones aún.</div>';
+      return;
+    }
+    var sorted = mtiItems.slice().sort(function(a,b) { return new Date(b.fecha) - new Date(a.fecha); });
+    var html = '';
+    sorted.forEach(function(item) {
+      var fecha = new Date(item.fecha + 'T12:00:00').toLocaleDateString('es-CL', { year:'numeric', month:'long', day:'numeric' });
+      var badgeLabel = { noticia:'Noticia', video:'Video', podcast:'Podcast' }[item.tipo] || 'Noticia';
+      var badgeClass = { noticia:'badge-noticia', video:'badge-video', podcast:'badge-podcast' }[item.tipo] || 'badge-noticia';
+      var mediaHTML = '';
+      if ((item.tipo === 'video' || item.tipo === 'podcast') && item.yt) {
+        var embed = getYTEmbed(item.yt);
+        mediaHTML = embed ? '<iframe src="' + embed + '" allowfullscreen></iframe>' : '<div class="media-placeholder"><div class="big-icon">' + (item.tipo==='podcast'?'🎙️':'▶️') + '</div></div>';
+      } else if (item.img) {
+        mediaHTML = '<img src="' + item.img + '" alt="' + item.titulo + '" />';
+      } else {
+        var icons = { noticia:'📰', video:'▶️', podcast:'🎙️' };
+        mediaHTML = '<div class="media-placeholder"><div class="big-icon">' + (icons[item.tipo]||'📰') + '</div></div>';
+      }
+      var adminBtns = isAdmin ? '<div class="mti-card-footer"><button class="btn-edit-noticia" onclick="editarMTI(\'' + item.id + '\')">✏️ Editar</button><button class="btn-del-noticia" onclick="eliminarMTI(\'' + item.id + '\')">🗑️</button></div>' : '';
+      html += '<div class="mti-card"><div class="mti-card-media">' + mediaHTML + '<span class="mti-type-badge ' + badgeClass + '">' + badgeLabel + '</span></div><div class="mti-card-body"><div class="mti-card-date">' + fecha + '</div><div class="mti-card-title">' + item.titulo + '</div>' + (item.texto ? '<div class="mti-card-text">' + item.texto + '</div>' : '') + adminBtns + '</div></div>';
+    });
+    grid.innerHTML = html;
+  }
+
+
+  // ── CLÁUSULAS POR NORMA ─────────────────────────────────
+  var clausulasPorNorma = {
+    '9001': [
+      ['4 · Contexto de la organización', ['4.1 · Comprensión del contexto','4.2 · Necesidades de partes interesadas','4.3 · Alcance del SGC','4.4 · Procesos del SGC']],
+      ['5 · Liderazgo', ['5.1.1 · Liderazgo y compromiso','5.1.2 · Enfoque al cliente','5.2 · Política de calidad','5.3 · Roles y responsabilidades']],
+      ['6 · Planificación', ['6.1 · Riesgos y oportunidades','6.2 · Objetivos de calidad','6.3 · Planificación de cambios']],
+      ['7 · Apoyo', ['7.1.1 · Recursos generales','7.1.2 · Personas','7.1.3 · Infraestructura','7.1.4 · Ambiente para los procesos','7.1.5 · Recursos de seguimiento y medición','7.1.6 · Conocimientos de la organización','7.2 · Competencia','7.3 · Toma de conciencia','7.4 · Comunicación','7.5.1 · Información documentada','7.5.2 · Creación y actualización','7.5.3 · Control de información documentada']],
+      ['8 · Operación', ['8.1 · Planificación y control operacional','8.2.1 · Comunicación con el cliente','8.2.2 · Determinación de requisitos','8.2.3 · Revisión de requisitos','8.3 · Diseño y desarrollo','8.4.1 · Control de procesos externos','8.4.2 · Tipo y alcance del control','8.4.3 · Información para proveedores externos','8.5.1 · Control de producción','8.5.2 · Identificación y trazabilidad','8.5.3 · Propiedad del cliente','8.5.4 · Preservación','8.5.5 · Actividades posteriores a la entrega','8.5.6 · Control de cambios','8.6 · Liberación de productos y servicios','8.7 · Control de salidas no conformes']],
+      ['9 · Evaluación del desempeño', ['9.1.1 · Seguimiento, medición y análisis','9.1.2 · Satisfacción del cliente','9.1.3 · Análisis y evaluación','9.2 · Auditoría interna','9.3.1 · Revisión por la dirección','9.3.2 · Entradas de la revisión','9.3.3 · Salidas de la revisión']],
+      ['10 · Mejora', ['10.1 · Generalidades','10.2 · No conformidad y acción correctiva','10.3 · Mejora continua']]
+    ],
+    '14001': [
+      ['4 · Contexto de la organización', ['4.1 · Comprensión del contexto','4.2 · Necesidades de partes interesadas','4.3 · Alcance del SGA','4.4 · Sistema de gestión ambiental']],
+      ['5 · Liderazgo', ['5.1 · Liderazgo y compromiso','5.2 · Política ambiental','5.3 · Roles y responsabilidades']],
+      ['6 · Planificación', ['6.1.1 · Generalidades (aspectos ambientales)','6.1.2 · Aspectos ambientales','6.1.3 · Requisitos legales y otros','6.1.4 · Planificación de acciones','6.2.1 · Objetivos ambientales','6.2.2 · Planificación para lograr objetivos']],
+      ['7 · Apoyo', ['7.1 · Recursos','7.2 · Competencia','7.3 · Toma de conciencia','7.4.1 · Comunicación general','7.4.2 · Comunicación interna','7.4.3 · Comunicación externa','7.5 · Información documentada']],
+      ['8 · Operación', ['8.1 · Planificación y control operacional','8.2 · Preparación y respuesta ante emergencias']],
+      ['9 · Evaluación del desempeño', ['9.1.1 · Seguimiento, medición y análisis','9.1.2 · Evaluación del cumplimiento legal','9.2 · Auditoría interna','9.3 · Revisión por la dirección']],
+      ['10 · Mejora', ['10.1 · Generalidades','10.2 · No conformidad y acción correctiva','10.3 · Mejora continua']]
+    ],
+    '45001': [
+      ['4 · Contexto de la organización', ['4.1 · Comprensión del contexto','4.2 · Necesidades de trabajadores y partes interesadas','4.3 · Alcance del SGSST','4.4 · Sistema de gestión SST']],
+      ['5 · Liderazgo y participación', ['5.1 · Liderazgo y compromiso','5.2 · Política de SST','5.3 · Roles y responsabilidades','5.4 · Consulta y participación de los trabajadores']],
+      ['6 · Planificación', ['6.1.1 · Generalidades','6.1.2.1 · Identificación de peligros','6.1.2.2 · Evaluación de riesgos SST','6.1.2.3 · Evaluación de otros riesgos','6.1.3 · Determinación de requisitos legales','6.1.4 · Planificación de acciones','6.2 · Objetivos de SST']],
+      ['7 · Apoyo', ['7.1 · Recursos','7.2 · Competencia','7.3 · Toma de conciencia','7.4 · Comunicación','7.5 · Información documentada']],
+      ['8 · Operación', ['8.1.1 · Planificación y control operacional','8.1.2 · Eliminar peligros y reducir riesgos','8.1.3 · Gestión del cambio','8.1.4.1 · Contratistas','8.1.4.2 · Contratación externa','8.2 · Preparación y respuesta ante emergencias']],
+      ['9 · Evaluación del desempeño', ['9.1.1 · Seguimiento, medición y análisis','9.1.2 · Evaluación del cumplimiento legal','9.2 · Auditoría interna','9.3 · Revisión por la dirección']],
+      ['10 · Mejora', ['10.1 · Generalidades','10.2 · Incidente, no conformidad y acción correctiva','10.3 · Mejora continua']]
+    ]
+  };
+
+  var normaActual = '9001';
+
+  function setNorma(norma, btn) {
+    normaActual = norma;
+    document.getElementById('new-norma').value = 'ISO ' + norma;
+    // Actualizar tabs
+    document.querySelectorAll('.norm-tab').forEach(function(t) {
+      t.style.background = 'transparent';
+      t.style.color = 'var(--ink-2)';
+      t.style.borderColor = 'var(--border)';
+      t.style.fontWeight = '400';
+    });
+    if (btn) {
+      btn.style.background = 'var(--gold)';
+      btn.style.color = '#0a0908';
+      btn.style.borderColor = 'var(--gold)';
+      btn.style.fontWeight = '700';
+    }
+    actualizarClausulas();
+  }
+
+  function actualizarClausulas() {
+    var select = document.getElementById('new-clause');
+    if (!select) return;
+    var grupos = clausulasPorNorma[normaActual] || [];
+    var html = '<option value="">Seleccionar cláusula...</option>';
+    grupos.forEach(function(grupo) {
+      html += '<optgroup label="' + grupo[0] + '">';
+      grupo[1].forEach(function(cl) { html += '<option>' + cl + '</option>'; });
+      html += '</optgroup>';
+    });
+    select.innerHTML = html;
+  }
+
+  // ── USUARIOS DEMO (mañana viene de Supabase) ─────────────
+  var usuariosFMA = [
+    { nombre: 'J. Fernández', email: 'jfernandez@fmaindustrial.com' },
+    { nombre: 'M. González', email: 'mgonzalez@fmaindustrial.com' },
+    { nombre: 'A. Morales', email: 'amorales@fmaindustrial.com' },
+    { nombre: 'C. Rodríguez', email: 'crodriguez@fmaindustrial.com' },
+    { nombre: 'P. Soto', email: 'psoto@fmaindustrial.com' }
+  ];
+
+  function cargarUsuariosSelect() {
+    var select = document.getElementById('new-resp-select');
+    if (!select) return;
+    var html = '<option value="">Seleccionar responsable...</option>';
+    usuariosFMA.forEach(function(u) {
+      html += '<option value="' + u.nombre + '" data-email="' + u.email + '">' + u.nombre + ' — ' + u.email + '</option>';
+    });
+    select.innerHTML = html;
+  }
+
+  function selectResponsable(sel) {
+    var val = sel.value;
+    if (val) document.getElementById('new-resp').value = val;
+  }
+
+
+  // ── PANEL DE INDICADORES ────────────────────────────────
+  function renderIndicadores() {
+    var ncsData = Object.values(fmas);
+
+    // Stats rápidos
+    var total = ncsData.length;
+    var abiertas = ncsData.filter(function(n) { return n.status === 'Abierta'; }).length;
+    var analisis = ncsData.filter(function(n) { return n.status === 'En análisis'; }).length;
+    var cerradas = ncsData.filter(function(n) { return n.status === 'Cerrada'; }).length;
+
+    var elTotal = document.getElementById('ind-total');
+    var elAbiertas = document.getElementById('ind-abiertas');
+    var elAnalisis = document.getElementById('ind-analisis');
+    var elCerradas = document.getElementById('ind-cerradas');
+    if (elTotal) elTotal.textContent = total;
+    if (elAbiertas) elAbiertas.textContent = abiertas;
+    if (elAnalisis) elAnalisis.textContent = analisis;
+    if (elCerradas) elCerradas.textContent = cerradas;
+
+    // Barras de estado
+    var maxBar = Math.max(abiertas, analisis, cerradas, 1);
+    var barEstados = document.getElementById('bar-estados');
+    if (barEstados) {
+      barEstados.innerHTML =
+        '<div class="bar-row"><div class="bar-label">Abiertas</div><div class="bar-track"><div class="bar-fill open" style="width:' + Math.round(abiertas/maxBar*100) + '%"><span>' + abiertas + '</span></div></div></div>' +
+        '<div class="bar-row"><div class="bar-label">Análisis</div><div class="bar-track"><div class="bar-fill analysis" style="width:' + Math.round(analisis/maxBar*100) + '%"><span>' + analisis + '</span></div></div></div>' +
+        '<div class="bar-row"><div class="bar-label">Cerradas</div><div class="bar-track"><div class="bar-fill closed" style="width:' + Math.round(cerradas/maxBar*100) + '%"><span>' + cerradas + '</span></div></div></div>';
+    }
+
+    // Tendencia mensual (datos demo + NCs reales por mes)
+    var meses = ['Ene','Feb','Mar','Abr','May','Jun'];
+    var valores = [0, 1, 1, 1, 0, 0];
+    // Contar NCs reales por mes
+    ncsData.forEach(function(nc) {
+      if (nc.date) {
+        var parts = nc.date.split('/');
+        if (parts.length === 3) {
+          var mes = parseInt(parts[1]) - 1;
+          if (mes >= 0 && mes < 6) valores[mes]++;
+        }
+      }
+    });
+    var maxVal = Math.max.apply(null, valores.concat([1]));
+    var trendBars = document.getElementById('trend-bars');
+    var trendLabels = document.getElementById('trend-labels');
+    if (trendBars) {
+      trendBars.innerHTML = valores.map(function(v, i) {
+        var h = Math.round((v / maxVal) * 70);
+        return '<div class="trend-col"><div class="trend-bar" style="height:' + Math.max(h,4) + 'px"><span class="trend-bar-val">' + (v > 0 ? v : '') + '</span></div></div>';
+      }).join('');
+    }
+    if (trendLabels) {
+      trendLabels.innerHTML = meses.map(function(m) {
+        return '<div class="trend-mes" style="flex:1;text-align:center">' + m + '</div>';
+      }).join('');
+    }
+
+    // Donut prioridad
+    var alta = ncsData.filter(function(n) { return n.priority === 'Alta'; }).length;
+    var media = ncsData.filter(function(n) { return n.priority === 'Media'; }).length;
+    var baja = ncsData.filter(function(n) { return n.priority === 'Baja'; }).length;
+    var circ = 2 * Math.PI * 35; // circunferencia
+    var legAlta = document.getElementById('leg-alta');
+    var legMedia = document.getElementById('leg-media');
+    var legBaja = document.getElementById('leg-baja');
+    var donutCenter = document.getElementById('donut-center');
+    if (legAlta) legAlta.textContent = alta;
+    if (legMedia) legMedia.textContent = media;
+    if (legBaja) legBaja.textContent = baja;
+    if (donutCenter) donutCenter.textContent = total;
+
+    // Actualizar arcos del donut
+    if (total > 0) {
+      var pAlta = alta / total * circ;
+      var pMedia = media / total * circ;
+      var pBaja = baja / total * circ;
+      var dAlta = document.getElementById('donut-alta');
+      var dMedia = document.getElementById('donut-media');
+      var dBaja = document.getElementById('donut-baja');
+      if (dAlta) dAlta.setAttribute('stroke-dasharray', pAlta + ' ' + circ);
+      if (dMedia) {
+        dMedia.setAttribute('stroke-dasharray', pMedia + ' ' + circ);
+        dMedia.setAttribute('stroke-dashoffset', -pAlta);
+      }
+      if (dBaja) {
+        dBaja.setAttribute('stroke-dasharray', pBaja + ' ' + circ);
+        dBaja.setAttribute('stroke-dashoffset', -(pAlta + pMedia));
+      }
+    }
+
+    // Alertas de revisión documental
+    var alertasEl = document.getElementById('alertas-docs');
+    var alertCount = document.getElementById('alert-count');
+    if (alertasEl && documentosFMA) {
+      var hoy = new Date();
+      var alertas = [];
+      documentosFMA.forEach(function(doc) {
+        if (!doc.fecha) return;
+        var fecha = new Date(doc.fecha + 'T12:00:00');
+        // Fecha de próxima revisión = fecha + 1 año
+        var proxRevision = new Date(fecha);
+        proxRevision.setFullYear(proxRevision.getFullYear() + 1);
+        var diffDias = Math.round((proxRevision - hoy) / (1000 * 60 * 60 * 24));
+        if (diffDias <= 90) {
+          alertas.push({ doc: doc, dias: diffDias });
+        }
+      });
+      alertas.sort(function(a,b) { return a.dias - b.dias; });
+
+      if (alertas.length === 0) {
+        alertasEl.innerHTML = '<div class="alert-item ok"><div class="alert-dot"></div><span>Todos los documentos al día ✓</span></div>';
+      } else {
+        if (alertCount) alertCount.textContent = alertas.length + ' alertas';
+        alertasEl.innerHTML = alertas.slice(0,4).map(function(a) {
+          var cls = a.dias < 0 ? 'urgente' : a.dias <= 30 ? 'urgente' : 'proximo';
+          var txt = a.dias < 0 ? 'Vencido hace ' + Math.abs(a.dias) + 'd' : 'Vence en ' + a.dias + ' días';
+          return '<div class="alert-item ' + cls + '"><div class="alert-dot"></div><div style="flex:1"><strong>' + a.doc.codigo + '</strong> — ' + a.doc.nombre + '</div><span style="font-family:monospace;font-size:10px">' + txt + '</span></div>';
+        }).join('');
+      }
     }
   }
 
