@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NormaAI FMA · Gestión de Faltas, Medidas y Acciones</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -870,6 +871,33 @@
   @media (max-width: 768px) {
     .indicadores-grid { grid-template-columns: 1fr; }
   }
+
+  /* LOGIN MEJORADO */
+  .gate-input-email {
+    width: 100%; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px; padding: 13px 16px; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; color: var(--ink); outline: none; letter-spacing: 0;
+    margin-bottom: 10px; transition: border-color 0.2s;
+  }
+  .gate-input-email:focus { border-color: var(--gold); }
+  .gate-input-email::placeholder { color: rgba(255,255,255,0.3); }
+  .gate-loading { display: none; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gold); margin-top: 8px; }
+  .gate-user-info { 
+    display: none; margin-top: 16px; padding: 10px 14px;
+    background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3);
+    border-radius: 8px; font-size: 12px; color: rgba(255,255,255,0.7);
+    font-family: 'DM Mono', monospace;
+  }
+  .topbar-user {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'DM Mono', monospace; font-size: 10px;
+    color: rgba(255,255,255,0.5); cursor: pointer;
+    padding: 4px 10px; border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.15s;
+  }
+  .topbar-user:hover { border-color: var(--gold); color: var(--gold); }
+  .topbar-user-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
 </style>
 </head>
 <body>
@@ -879,10 +907,12 @@
   <div class="gate-box">
     <img src="/images/manny.jpeg" alt="Manny" style="width:80px;height:80px;object-fit:cover;object-position:60% 15%;border-radius:50%;border:2px solid var(--gold);margin:0 auto 16px;display:block" onerror="this.style.display='none'" />
     <div class="gate-brand">NormaAI <span>FMA</span></div>
-    <div class="gate-sub">Faltas · Medidas · Acciones · Demo</div>
-    <input class="gate-input" type="password" id="gate-input" placeholder="Clave de acceso" />
-    <button class="gate-btn" onclick="checkPassword()">Acceder →</button>
-    <div class="gate-error" id="gate-error">Clave incorrecta. Intenta nuevamente.</div>
+    <div class="gate-sub">Sistema de Gestión · FMA Industrial SpA</div>
+    <input class="gate-input-email" type="email" id="gate-email" placeholder="Correo electrónico" autocomplete="email" />
+    <input class="gate-input" type="password" id="gate-input" placeholder="Contraseña" autocomplete="current-password" />
+    <button class="gate-btn" onclick="loginSupabase()" id="gate-btn">Ingresar →</button>
+    <div class="gate-error" id="gate-error">Correo o contraseña incorrectos.</div>
+    <div class="gate-loading" id="gate-loading">Verificando acceso...</div>
     <div class="gate-footer">Procesus · Isonauta · 2026</div>
   </div>
 </div>
@@ -899,7 +929,7 @@
   </div>
   <div class="topbar-right">
     <span class="norma-badge">ISO 9001 · 14001 · 45001</span>
-    <span class="demo-badge">DEMO</span>
+    <div class="topbar-user" id="topbar-user" onclick="cerrarSesion()" style="display:none"><div class="topbar-user-dot"></div><span id="topbar-user-name">Usuario</span> · Salir</div><span class="demo-badge">DEMO</span>
   </div>
 </div>
 
@@ -1594,21 +1624,118 @@
     }
   }
 
-  function checkPassword() {
-    const val = document.getElementById('gate-input').value;
-    if (val === 'FMA2026SIG') {
+  // ── SUPABASE AUTH ───────────────────────────────────────
+  const SUPABASE_URL = 'https://ejtbqmjbcozhlxscxpze.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVqdGJxbWpiY296aGx4c2N4cHplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTkzMzUsImV4cCI6MjA5MjI5NTMzNX0.ZJfedmp6Lyx7xJtX9lJ9uTEGmGwSGUa5amFGwc5ZQWw';
+  var _supabase = null;
+
+  function getSupabase() {
+    if (!_supabase && window.supabase) {
+      _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    }
+    return _supabase;
+  }
+
+  var currentUser = null;
+  var currentUserRol = 'operador';
+
+  async function loginSupabase() {
+    var email = document.getElementById('gate-email').value.trim();
+    var password = document.getElementById('gate-input').value;
+    if (!email || !password) { mostrarErrorLogin('Ingresa tu correo y contraseña.'); return; }
+
+    var btn = document.getElementById('gate-btn');
+    var loading = document.getElementById('gate-loading');
+    btn.disabled = true; btn.textContent = '...';
+    loading.style.display = 'block';
+
+    try {
+      var sb = getSupabase();
+      var result = await sb.auth.signInWithPassword({ email: email, password: password });
+
+      if (result.error) {
+        mostrarErrorLogin('Correo o contraseña incorrectos.');
+        btn.disabled = false; btn.textContent = 'Ingresar →';
+        loading.style.display = 'none';
+        return;
+      }
+
+      currentUser = result.data.user;
+
+      // Obtener rol desde tabla usuarios
+      var perfil = await sb.from('usuarios').select('nombre, rol').eq('auth_id', currentUser.id).single();
+      if (perfil.data) {
+        currentUserRol = perfil.data.rol;
+        var nombre = perfil.data.nombre || email.split('@')[0];
+        document.getElementById('topbar-user-name').textContent = nombre;
+      } else {
+        currentUserRol = 'operador';
+        document.getElementById('topbar-user-name').textContent = email.split('@')[0];
+      }
+
+      // Activar permisos admin si corresponde
+      if (currentUserRol === 'admin') {
+        isAdmin = true;
+        var btnMti = document.getElementById('btn-nueva-mti');
+        if (btnMti) btnMti.style.display = 'inline-flex';
+        var btnDoc = document.getElementById('btn-subir-doc');
+        if (btnDoc) btnDoc.style.display = 'inline-flex';
+        var heroEdit = document.getElementById('hero-video-edit-btn');
+        if (heroEdit) heroEdit.style.display = 'block';
+        var adminGate = document.getElementById('admin-gate-noticias');
+        if (adminGate) adminGate.style.display = 'none';
+        var btnNoticia = document.getElementById('btn-nueva-noticia');
+        if (btnNoticia) btnNoticia.style.display = 'inline-flex';
+      }
+
+      // Mostrar app
+      document.getElementById('topbar-user').style.display = 'flex';
       document.getElementById('password-gate').style.display = 'none';
       document.getElementById('app').style.display = 'block';
-    } else {
-      const err = document.getElementById('gate-error');
-      err.style.display = 'block';
-      document.getElementById('gate-input').style.borderColor = '#e07060';
-      setTimeout(() => { err.style.display = 'none'; document.getElementById('gate-input').style.borderColor = 'rgba(212,175,55,0.2)'; }, 2500);
+
+      // Inicializar
+      if (typeof cargarMTI === 'function') cargarMTI();
+      if (typeof cargarHeroVideo === 'function') cargarHeroVideo();
+      if (typeof cargarDocumentos === 'function') cargarDocumentos();
+      if (typeof actualizarClausulas === 'function') actualizarClausulas();
+      if (typeof cargarUsuariosSelect === 'function') cargarUsuariosSelect();
+      if (typeof renderIndicadores === 'function') setTimeout(renderIndicadores, 100);
+      if (typeof renderMTI === 'function') renderMTI(3);
+
+    } catch(e) {
+      mostrarErrorLogin('Error de conexión. Intenta nuevamente.');
+      btn.disabled = false; btn.textContent = 'Ingresar →';
+      loading.style.display = 'none';
     }
   }
 
+  function mostrarErrorLogin(msg) {
+    var err = document.getElementById('gate-error');
+    err.textContent = msg; err.style.display = 'block';
+    document.getElementById('gate-input').style.borderColor = '#e07060';
+    setTimeout(function() {
+      err.style.display = 'none';
+      document.getElementById('gate-input').style.borderColor = 'rgba(255,255,255,0.15)';
+    }, 3000);
+  }
+
+  async function cerrarSesion() {
+    var sb = getSupabase();
+    if (sb) await sb.auth.signOut();
+    currentUser = null; currentUserRol = 'operador'; isAdmin = false;
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('password-gate').style.display = 'flex';
+    document.getElementById('gate-email').value = '';
+    document.getElementById('gate-input').value = '';
+    document.getElementById('topbar-user').style.display = 'none';
+  }
+
+  function checkPassword() { loginSupabase(); }
+
   document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('gate-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPassword(); });
+    document.getElementById('gate-input').addEventListener('keydown', e => { if (e.key === 'Enter') loginSupabase(); });
+    var ge = document.getElementById('gate-email');
+    if (ge) ge.addEventListener('keydown', e => { if (e.key === 'Enter') loginSupabase(); });
     const ci = document.getElementById('chat-text');
     if (ci) ci.addEventListener('keydown', e => { if (e.key === 'Enter') sendUserMessage(); });
     const mi = document.getElementById('manny-input');
