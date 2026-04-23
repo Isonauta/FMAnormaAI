@@ -3314,14 +3314,14 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
       var docs = res.data || [];
       var hoy = new Date(); hoy.setHours(0,0,0,0);
       body.innerHTML = docs.map(function(d) {
-        var fechaStr = '—'; var estadoClass = ''; var estadoLabel = '';
+        var fechaStr = '—'; var estadoClass = ''; 
         if (d.fecha_revision) {
           var f = new Date(d.fecha_revision + 'T12:00:00');
           var diff = Math.floor((f - hoy) / (1000*60*60*24));
           fechaStr = f.toLocaleDateString('es-CL', { day:'2-digit', month:'short', year:'numeric' });
-          if (diff < 0) { estadoClass = 'fecha-vencida'; estadoLabel = 'Vencido hace ' + Math.abs(diff) + 'd'; }
-          else if (diff <= 30) { estadoClass = 'fecha-pronto'; estadoLabel = 'Vence en ' + diff + 'd'; }
-          else { estadoClass = 'fecha-ok'; estadoLabel = 'Vigente'; }
+          if (diff < 0) estadoClass = 'fecha-vencida';
+          else if (diff <= 30) estadoClass = 'fecha-pronto';
+          else estadoClass = 'fecha-ok';
         }
         return '<tr>'
           + '<td class="fma-code">' + (d.codigo || '—') + '</td>'
@@ -3329,7 +3329,9 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
           + '<td><span class="clause-tag">' + (d.categoria || '—') + '</span></td>'
           + '<td class="' + estadoClass + '">' + fechaStr + '</td>'
           + '<td style="font-family:monospace;font-size:11px;color:var(--ink-3)">' + (d.version || '—') + '</td>'
-          + '<td><button class="btn-ghost" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="abrirModalFechaDoc('' + d.id + '','' + d.titulo.replace(/'/g,"\'") + '','' + (d.codigo||'') + '','' + (d.fecha_revision||'') + '','' + (d.version||'') + '')">📅 Actualizar</button></td>'
+          + '<td><button class="btn-ghost" style="font-size:11px;padding:4px 10px" onclick="abrirFechaDoc(this)" '
+          + 'data-id="' + d.id + '" data-titulo="' + d.titulo.replace(/"/g,'') + '" data-codigo="' + (d.codigo||'') + '" data-fecha="' + (d.fecha_revision||'') + '" data-version="' + (d.version||'') + '">'
+          + '📅 Actualizar</button></td>'
           + '</tr>';
       }).join('');
     } catch(e) {
@@ -3337,7 +3339,16 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     }
   }
 
-  function abrirModalFechaDoc(id, nombre, codigo, fechaActual, versionActual) {
+  function abrirFechaDoc(btn) {
+    var id = btn.getAttribute('data-id');
+    var titulo = btn.getAttribute('data-titulo');
+    var codigo = btn.getAttribute('data-codigo');
+    var fecha = btn.getAttribute('data-fecha');
+    var version = btn.getAttribute('data-version');
+    abrirModalFechaDoc(id, titulo, codigo, fecha, version);
+  }
+
+    function abrirModalFechaDoc(id, nombre, codigo, fechaActual, versionActual) {
     document.getElementById('fecha-doc-id').value = id;
     document.getElementById('fecha-doc-nombre').textContent = nombre;
     document.getElementById('fecha-doc-codigo').textContent = codigo;
@@ -3381,8 +3392,8 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
         + '<td style="font-weight:500;color:var(--ink)">' + a.nombre + '</td>'
         + '<td style="font-size:13px;color:var(--ink-3)">' + (a.responsable || '—') + '</td>'
         + '<td style="display:flex;gap:6px">'
-        + '<button class="btn-ghost" style="font-size:11px;padding:4px 10px" onclick="editarArea('' + a.id + '')">✏️</button>'
-        + '<button style="font-size:11px;padding:4px 10px;background:transparent;border:1px solid var(--danger-border);border-radius:5px;color:var(--danger);cursor:pointer" onclick="eliminarArea('' + a.id + '')">🗑️</button>'
+        + '<button class="btn-ghost" style="font-size:11px;padding:4px 10px" onclick="editarArea(\'' + a.id + '\')">✏️</button>'
+        + '<button style="font-size:11px;padding:4px 10px;background:transparent;border:1px solid var(--danger-border);border-radius:5px;color:var(--danger);cursor:pointer" onclick="eliminarArea(\'' + a.id + '\')">🗑️</button>'
         + '</td></tr>';
     }).join('');
   }
