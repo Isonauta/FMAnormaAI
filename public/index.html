@@ -1488,12 +1488,13 @@
       <div class="doc-toolbar">
         <input class="doc-search" type="text" id="doc-search-input" placeholder="🔍  Buscar por código, nombre o descripción..." oninput="filtrarDocs()" />
         <select class="doc-filter" id="doc-filter-tipo" onchange="filtrarDocs()">
-          <option value="">Todos los tipos</option>
+          <option value="">Todas las categorías</option>
           <option value="Procedimiento">Procedimientos</option>
-          <option value="Manual">Manuales</option>
-          <option value="Instructivo">Instructivos</option>
-          <option value="Registro">Registros</option>
           <option value="Norma">Normas</option>
+          <option value="Matriz">Matrices</option>
+          <option value="Plantilla">Plantillas</option>
+          <option value="Registro">Registros</option>
+          <option value="Instructivo">Instructivos</option>
         </select>
         <select class="doc-filter" id="doc-filter-norma" onchange="filtrarDocs()">
           <option value="">Todas las normas</option>
@@ -1564,13 +1565,14 @@
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
             <div class="form-group">
-              <label class="form-label">Tipo *</label>
+              <label class="form-label">Categoría *</label>
               <select class="field-select" id="doc-tipo-input">
                 <option>Procedimiento</option>
-                <option>Manual</option>
-                <option>Instructivo</option>
-                <option>Registro</option>
                 <option>Norma</option>
+                <option>Matriz</option>
+                <option>Plantilla</option>
+                <option>Registro</option>
+                <option>Instructivo</option>
               </select>
             </div>
             <div class="form-group">
@@ -1598,9 +1600,22 @@
             <textarea class="field-textarea" rows="2" id="doc-desc-input" placeholder="¿De qué trata este documento?"></textarea>
           </div>
           <div class="form-group" style="margin-top:12px">
-            <label class="form-label">URL del documento *</label>
-            <input class="field-input" type="text" id="doc-url-input" placeholder="https://... (Supabase Storage, Google Drive, SharePoint...)" />
-            <div style="font-size:10px;color:var(--ink-3);margin-top:4px">Pega la URL pública del archivo. Soporta PDF, Word, Excel, PowerPoint.</div>
+            <label class="form-label">Archivo *</label>
+            <div class="doc-upload-zone" id="doc-upload-zone" onclick="document.getElementById('doc-file-input').click()">
+              <div id="doc-upload-placeholder">
+                <div style="font-size:26px;margin-bottom:6px;opacity:0.4">📁</div>
+                <div style="font-size:12px;color:var(--ink-2);font-weight:500">Clic para seleccionar archivo</div>
+                <div style="font-size:10px;color:var(--ink-3);margin-top:3px">PDF, Word (.docx), Excel (.xlsx) — máx. 20 MB</div>
+              </div>
+              <div id="doc-file-selected" style="display:none;font-size:12px;color:var(--ink-2)"></div>
+            </div>
+            <input type="file" id="doc-file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" style="display:none" onchange="previewDocFile(this)" />
+            <div style="font-size:10px;color:var(--ink-3);margin-top:6px">O pega una URL directa (si ya está alojado en otro servicio):</div>
+            <input class="field-input" type="text" id="doc-url-input" placeholder="https://... (opcional si subes archivo)" style="margin-top:6px;font-size:12px" />
+          </div>
+          <div id="doc-upload-progress" style="display:none;margin-top:10px">
+            <div style="font-size:11px;color:var(--ink-3);margin-bottom:4px" id="doc-upload-status">Subiendo archivo...</div>
+            <div style="height:4px;background:var(--border);border-radius:99px;overflow:hidden"><div id="doc-upload-bar" style="height:100%;background:var(--gold);border-radius:99px;width:0%;transition:width 0.3s"></div></div>
           </div>
         </div>
         <div class="modal-footer">
@@ -2340,35 +2355,73 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
   }
 
 
-  // ── GESTOR DOCUMENTAL ───────────────────────────────────
+  // ── GESTOR DOCUMENTAL · SUPABASE ────────────────────────
   var documentosFMA = [];
   var documentosFiltrados = [];
+  var docFileToUpload = null;
 
-  function cargarDocumentos() {
-    var saved = localStorage.getItem('fma_documentos');
-    documentosFMA = saved ? JSON.parse(saved) : [
-      { id: 'd1', codigo: 'PGI-11', nombre: 'Fabricación Santiago', tipo: 'Procedimiento', norma: 'ISO 9001', version: 'v3.0', fecha: '2026-03-15', desc: 'Proceso de fabricación en planta Santiago: OT, planos, calidad y despacho.', url: '' },
-      { id: 'd2', codigo: 'PGI-22', nombre: 'Fabricación Antofagasta', tipo: 'Procedimiento', norma: 'ISO 9001', version: 'v2.1', fecha: '2026-02-10', desc: 'Proceso de fabricación en sucursal Antofagasta, diseño local y liberación.', url: '' },
-      { id: 'd3', codigo: 'PGI-09', nombre: 'Trabajo en Terreno', tipo: 'Procedimiento', norma: 'ISO 9001', version: 'v2.0', fecha: '2025-11-20', desc: 'Protocolo para trabajo en terreno con clientes: preparación, HCR y cierre.', url: '' },
-      { id: 'd4', codigo: 'PGI-14', nombre: 'Bodega y Despacho', tipo: 'Procedimiento', norma: 'ISO 9001', version: 'v1.5', fecha: '2025-10-05', desc: 'Control de bodega, guías de consumo y despacho de productos terminados.', url: '' },
-      { id: 'd5', codigo: 'MN-01', nombre: 'Manual de Calidad', tipo: 'Manual', norma: 'ISO 9001', version: 'v4.0', fecha: '2026-01-08', desc: 'Manual del Sistema de Gestión de Calidad de FMA Industrial SpA.', url: '' }
-    ];
-    documentosFiltrados = documentosFMA.slice();
-    renderDocumentos();
+  // Íconos y colores por extensión de archivo
+  function getFileIcon(url, tipo) {
+    if (!url) return getTipoIconCategoria(tipo);
+    var ext = url.split('.').pop().toLowerCase().split('?')[0];
+    var map = { pdf:'📄', docx:'📝', doc:'📝', xlsx:'📊', xls:'📊', pptx:'📋', ppt:'📋' };
+    return map[ext] || getTipoIconCategoria(tipo);
   }
 
-  function guardarDocStorage() {
-    localStorage.setItem('fma_documentos', JSON.stringify(documentosFMA));
+  function getTipoIconCategoria(tipo) {
+    var map = { 'Procedimiento':'📋', 'Norma':'⚖️', 'Matriz':'📊', 'Plantilla':'📝', 'Registro':'🗂️', 'Instructivo':'📖' };
+    return map[tipo] || '📄';
+  }
+
+  function getFileBadge(url, tipo) {
+    if (!url) return getTipoBadge(tipo);
+    var ext = url.split('.').pop().toLowerCase().split('?')[0];
+    var map = { pdf:'tipo-pdf', docx:'tipo-word', doc:'tipo-word', xlsx:'tipo-excel', xls:'tipo-excel', pptx:'tipo-ppt', ppt:'tipo-ppt' };
+    return map[ext] || getTipoBadge(tipo);
+  }
+
+  function getFileLabel(url) {
+    if (!url) return '—';
+    var ext = url.split('.').pop().toLowerCase().split('?')[0];
+    var map = { pdf:'PDF', docx:'Word', doc:'Word', xlsx:'Excel', xls:'Excel', pptx:'PowerPoint', ppt:'PowerPoint' };
+    return map[ext] || ext.toUpperCase();
   }
 
   function getTipoBadge(tipo) {
-    var map = { 'Procedimiento': 'tipo-pdf', 'Manual': 'tipo-word', 'Instructivo': 'tipo-word', 'Registro': 'tipo-excel', 'Norma': 'tipo-ppt' };
+    var map = { 'Procedimiento':'tipo-pdf', 'Norma':'tipo-ppt', 'Matriz':'tipo-excel', 'Plantilla':'tipo-word', 'Registro':'tipo-excel', 'Instructivo':'tipo-word' };
     return map[tipo] || 'tipo-pdf';
   }
 
-  function getTipoIcon(tipo) {
-    var map = { 'Procedimiento': '📋', 'Manual': '📖', 'Instructivo': '📝', 'Registro': '📊', 'Norma': '⚖️' };
-    return map[tipo] || '📄';
+  function getTipoIcon(tipo) { return getTipoIconCategoria(tipo); }
+
+  async function cargarDocumentos() {
+    var body = document.getElementById('doc-list-body');
+    if (body) body.innerHTML = '<div class="doc-empty"><div style="font-size:13px;color:var(--ink-3)">Cargando documentos...</div></div>';
+    try {
+      var sb = getSupabase();
+      if (!sb) throw new Error('Supabase no disponible');
+      var res = await sb.from('documentos').select('*').eq('visible', true).order('fecha_subida', { ascending: false });
+      if (res.error) throw res.error;
+      documentosFMA = (res.data || []).map(function(d) {
+        return {
+          id: d.id, codigo: d.codigo, nombre: d.titulo,
+          tipo: d.categoria, norma: d.norma || 'General',
+          version: d.version, fecha: d.fecha_revision || d.fecha_subida,
+          desc: d.descripcion, url: d.archivo_url,
+          nombre_archivo: d.nombre_archivo, tipo_mime: d.tipo_mime
+        };
+      });
+    } catch(e) {
+      console.warn('Supabase docs error, usando localStorage:', e);
+      var saved = localStorage.getItem('fma_documentos');
+      documentosFMA = saved ? JSON.parse(saved) : [
+        { id:'d1', codigo:'PGI-11', nombre:'Fabricación Santiago', tipo:'Procedimiento', norma:'ISO 9001', version:'v3.0', fecha:'2026-03-15', desc:'Proceso de fabricación en planta Santiago: OT, planos, calidad y despacho.', url:'' },
+        { id:'d2', codigo:'PGI-22', nombre:'Fabricación Antofagasta', tipo:'Procedimiento', norma:'ISO 9001', version:'v2.1', fecha:'2026-02-10', desc:'Proceso de fabricación en sucursal Antofagasta, diseño local y liberación.', url:'' },
+        { id:'d3', codigo:'MN-01', nombre:'Manual de Calidad', tipo:'Procedimiento', norma:'ISO 9001', version:'v4.0', fecha:'2026-01-08', desc:'Manual del Sistema de Gestión de Calidad de FMA Industrial SpA.', url:'' }
+      ];
+    }
+    documentosFiltrados = documentosFMA.slice();
+    renderDocumentos();
   }
 
   function renderDocumentos() {
@@ -2380,18 +2433,24 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     }
     var html = '';
     documentosFiltrados.forEach(function(doc) {
-      var fecha = doc.fecha ? new Date(doc.fecha + 'T12:00:00').toLocaleDateString('es-CL', { day:'2-digit', month:'short', year:'numeric' }) : '—';
-      var adminBtns = isAdmin ? '<button class="btn-ghost" style="font-size:10px;padding:3px 8px;margin-top:4px" onclick="event.stopPropagation();editarDoc(\'' + doc.id + '\')">✏️</button> <button style="font-size:10px;padding:3px 8px;margin-top:4px;background:transparent;border:1px solid var(--danger-border);border-radius:5px;color:var(--danger);cursor:pointer" onclick="event.stopPropagation();eliminarDoc(\'' + doc.id + '\')">🗑️</button>' : '';
-      html += '<div class="doc-row" onclick="abrirVisor(\'' + doc.id + '\')">' +
-        '<div class="doc-codigo">' + doc.codigo + '</div>' +
-        '<div><div class="doc-nombre">' + getTipoIcon(doc.tipo) + ' ' + doc.nombre + '</div>' +
-          '<div class="doc-nombre-sub">' + (doc.desc ? doc.desc.substring(0,60) + (doc.desc.length>60?'…':'') : '') + '</div>' +
-          (adminBtns ? '<div style="margin-top:4px">' + adminBtns + '</div>' : '') +
-        '</div>' +
-        '<div><span class="doc-tipo-badge ' + getTipoBadge(doc.tipo) + '">' + doc.tipo + '</span><br><span style="font-family:monospace;font-size:9px;color:var(--ink-3)">' + (doc.norma||'') + '</span></div>' +
-        '<div class="doc-fecha">' + (doc.version||'') + '<br>' + fecha + '</div>' +
-        '<div><button class="doc-ver-btn" onclick="event.stopPropagation();abrirVisor(\'' + doc.id + '\')" >👁</button></div>' +
-      '</div>';
+      var fecha = doc.fecha ? new Date(doc.fecha.substring(0,10) + 'T12:00:00').toLocaleDateString('es-CL', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+      var icon = getFileIcon(doc.url, doc.tipo);
+      var badge = getFileBadge(doc.url, doc.tipo);
+      var fileLabel = getFileLabel(doc.url);
+      var adminBtns = isAdmin
+        ? '<button class="btn-ghost" style="font-size:10px;padding:3px 8px;margin-top:4px" onclick="event.stopPropagation();editarDoc(\'' + doc.id + '\')">✏️ Editar</button> '
+        + '<button style="font-size:10px;padding:3px 8px;margin-top:4px;background:transparent;border:1px solid var(--danger-border);border-radius:5px;color:var(--danger);cursor:pointer" onclick="event.stopPropagation();eliminarDoc(\'' + doc.id + '\')">🗑️</button>'
+        : '';
+      html += '<div class="doc-row" onclick="abrirVisor(\'' + doc.id + '\')">'
+        + '<div class="doc-codigo">' + (doc.codigo || '—') + '</div>'
+        + '<div><div class="doc-nombre">' + icon + ' ' + doc.nombre + '</div>'
+        + '<div class="doc-nombre-sub">' + (doc.desc ? doc.desc.substring(0,70) + (doc.desc.length>70?'…':'') : '') + '</div>'
+        + (adminBtns ? '<div style="margin-top:4px">' + adminBtns + '</div>' : '')
+        + '</div>'
+        + '<div><span class="doc-tipo-badge ' + badge + '">' + fileLabel + '</span><br><span style="font-family:monospace;font-size:9px;color:var(--ink-3);display:inline-block;margin-top:3px">' + doc.tipo + '</span></div>'
+        + '<div class="doc-fecha">' + (doc.version || '') + '<br>' + fecha + '</div>'
+        + '<div><button class="doc-ver-btn" onclick="event.stopPropagation();abrirVisor(\'' + doc.id + '\')" title="Ver documento">👁</button></div>'
+        + '</div>';
     });
     body.innerHTML = html;
   }
@@ -2401,12 +2460,134 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     var tipo = document.getElementById('doc-filter-tipo').value;
     var norma = document.getElementById('doc-filter-norma').value;
     documentosFiltrados = documentosFMA.filter(function(d) {
-      var matchQ = !q || d.codigo.toLowerCase().includes(q) || d.nombre.toLowerCase().includes(q) || (d.desc||'').toLowerCase().includes(q);
+      var matchQ = !q || (d.codigo||'').toLowerCase().includes(q) || d.nombre.toLowerCase().includes(q) || (d.desc||'').toLowerCase().includes(q);
       var matchTipo = !tipo || d.tipo === tipo;
       var matchNorma = !norma || d.norma === norma;
       return matchQ && matchTipo && matchNorma;
     });
     renderDocumentos();
+  }
+
+  function previewDocFile(input) {
+    var file = input.files[0];
+    if (!file) return;
+    docFileToUpload = file;
+    var placeholder = document.getElementById('doc-upload-placeholder');
+    var selected = document.getElementById('doc-file-selected');
+    var ext = file.name.split('.').pop().toLowerCase();
+    var iconMap = { pdf:'📄', docx:'📝', doc:'📝', xlsx:'📊', xls:'📊', pptx:'📋', ppt:'📋' };
+    var icon = iconMap[ext] || '📁';
+    var size = file.size < 1024*1024 ? Math.round(file.size/1024) + ' KB' : (file.size/(1024*1024)).toFixed(1) + ' MB';
+    placeholder.style.display = 'none';
+    selected.style.display = 'block';
+    selected.innerHTML = '<div style="font-size:24px;margin-bottom:4px">' + icon + '</div><div style="font-weight:500;color:var(--ink)">' + file.name + '</div><div style="font-size:10px;color:var(--ink-3);margin-top:2px">' + size + '</div>';
+    document.getElementById('doc-upload-zone').style.borderColor = 'var(--gold)';
+    document.getElementById('doc-upload-zone').style.background = 'var(--gold-light)';
+  }
+
+  async function subirArchivoSupabase(file, codigo) {
+    var sb = getSupabase();
+    var ext = file.name.split('.').pop().toLowerCase();
+    var fileName = codigo.replace(/[^a-zA-Z0-9-_]/g,'_') + '_' + Date.now() + '.' + ext;
+    var path = 'documentos/' + fileName;
+
+    document.getElementById('doc-upload-progress').style.display = 'block';
+    document.getElementById('doc-upload-status').textContent = 'Subiendo ' + file.name + '...';
+    document.getElementById('doc-upload-bar').style.width = '30%';
+
+    var res = await sb.storage.from('biblioteca').upload(path, file, { cacheControl: '3600', upsert: false });
+    if (res.error) throw res.error;
+
+    document.getElementById('doc-upload-bar').style.width = '80%';
+
+    var urlRes = sb.storage.from('biblioteca').getPublicUrl(path);
+    var publicUrl = urlRes.data.publicUrl;
+
+    document.getElementById('doc-upload-bar').style.width = '100%';
+    document.getElementById('doc-upload-status').textContent = '✓ Archivo subido correctamente';
+
+    return { url: publicUrl, nombre_archivo: file.name, tipo_mime: file.type };
+  }
+
+  async function guardarDoc() {
+    var codigo = document.getElementById('doc-codigo-input').value.trim();
+    var nombre = document.getElementById('doc-nombre-input').value.trim();
+    var urlManual = document.getElementById('doc-url-input').value.trim();
+    if (!codigo || !nombre) { showToast('Completa código y nombre', false); return; }
+
+    var btnGuardar = document.querySelector('#modal-doc .btn-primary');
+    btnGuardar.disabled = true; btnGuardar.textContent = 'Guardando...';
+
+    try {
+      var finalUrl = urlManual;
+      var nombre_archivo = '';
+      var tipo_mime = '';
+
+      // Subir archivo si hay uno seleccionado
+      if (docFileToUpload) {
+        var uploadResult = await subirArchivoSupabase(docFileToUpload, codigo);
+        finalUrl = uploadResult.url;
+        nombre_archivo = uploadResult.nombre_archivo;
+        tipo_mime = uploadResult.tipo_mime;
+      }
+
+      var docData = {
+        codigo: codigo,
+        titulo: nombre,
+        categoria: document.getElementById('doc-tipo-input').value,
+        norma: document.getElementById('doc-norma-input').value,
+        version: document.getElementById('doc-version-input').value.trim(),
+        fecha_revision: document.getElementById('doc-fecha-input').value || null,
+        descripcion: document.getElementById('doc-desc-input').value.trim(),
+        archivo_url: finalUrl,
+        nombre_archivo: nombre_archivo,
+        tipo_mime: tipo_mime,
+        visible: true,
+        subido_por: currentUser ? currentUser.email : 'admin'
+      };
+
+      var sb = getSupabase();
+      var editId = document.getElementById('doc-edit-id').value;
+
+      if (editId) {
+        var res = await sb.from('documentos').update(docData).eq('id', editId);
+        if (res.error) throw res.error;
+        showToast('Documento actualizado ✓', true);
+      } else {
+        var res2 = await sb.from('documentos').insert([docData]);
+        if (res2.error) throw res2.error;
+        showToast('Documento publicado en la biblioteca ✓', true);
+      }
+
+      document.getElementById('modal-doc').style.display = 'none';
+      docFileToUpload = null;
+      await cargarDocumentos();
+
+    } catch(e) {
+      console.error('Error guardando doc:', e);
+      showToast('Error: ' + (e.message || 'No se pudo guardar'), false);
+      document.getElementById('doc-upload-progress').style.display = 'none';
+    }
+
+    btnGuardar.disabled = false; btnGuardar.textContent = 'Guardar documento';
+  }
+
+  function editarDoc(id) { abrirModalDoc(id); }
+
+  async function eliminarDoc(id) {
+    if (!confirm('¿Eliminar este documento de la biblioteca?')) return;
+    try {
+      var sb = getSupabase();
+      var res = await sb.from('documentos').update({ visible: false }).eq('id', id);
+      if (res.error) throw res.error;
+      showToast('Documento eliminado', false);
+      await cargarDocumentos();
+    } catch(e) {
+      // Fallback local
+      documentosFMA = documentosFMA.filter(function(d) { return d.id !== id; });
+      filtrarDocs();
+      showToast('Documento eliminado', false);
+    }
   }
 
   function abrirVisor(id) {
@@ -2473,6 +2654,13 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
 
   function abrirModalDoc(id) {
     id = id || null;
+    docFileToUpload = null;
+    document.getElementById('doc-upload-placeholder').style.display = 'block';
+    document.getElementById('doc-file-selected').style.display = 'none';
+    document.getElementById('doc-upload-zone').style.borderColor = '';
+    document.getElementById('doc-upload-zone').style.background = '';
+    document.getElementById('doc-upload-progress').style.display = 'none';
+    document.getElementById('doc-file-input').value = '';
     document.getElementById('modal-doc-titulo').textContent = id ? 'Editar documento' : 'Subir documento';
     document.getElementById('doc-edit-id').value = id || '';
     if (id) {
@@ -2483,7 +2671,7 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
         document.getElementById('doc-tipo-input').value = doc.tipo || 'Procedimiento';
         document.getElementById('doc-norma-input').value = doc.norma || 'ISO 9001';
         document.getElementById('doc-version-input').value = doc.version || '';
-        document.getElementById('doc-fecha-input').value = doc.fecha || '';
+        document.getElementById('doc-fecha-input').value = doc.fecha ? doc.fecha.substring(0,10) : '';
         document.getElementById('doc-desc-input').value = doc.desc || '';
         document.getElementById('doc-url-input').value = doc.url || '';
       }
@@ -2503,44 +2691,6 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     document.getElementById('modal-doc').style.display = 'none';
   }
 
-  function guardarDoc() {
-    var codigo = document.getElementById('doc-codigo-input').value.trim();
-    var nombre = document.getElementById('doc-nombre-input').value.trim();
-    var url = document.getElementById('doc-url-input').value.trim();
-    if (!codigo || !nombre) { showToast('Completa código y nombre', false); return; }
-    var doc = {
-      codigo: codigo, nombre: nombre,
-      tipo: document.getElementById('doc-tipo-input').value,
-      norma: document.getElementById('doc-norma-input').value,
-      version: document.getElementById('doc-version-input').value.trim(),
-      fecha: document.getElementById('doc-fecha-input').value,
-      desc: document.getElementById('doc-desc-input').value.trim(),
-      url: url
-    };
-    var editId = document.getElementById('doc-edit-id').value;
-    if (editId) {
-      var idx = documentosFMA.findIndex(function(d) { return d.id === editId; });
-      if (idx >= 0) documentosFMA[idx] = Object.assign(documentosFMA[idx], doc);
-      showToast('Documento actualizado', true);
-    } else {
-      doc.id = 'doc' + Date.now();
-      documentosFMA.unshift(doc);
-      showToast('Documento agregado', true);
-    }
-    document.getElementById('modal-doc').style.display = 'none';
-    guardarDocStorage();
-    filtrarDocs();
-  }
-
-  function editarDoc(id) { abrirModalDoc(id); }
-
-  function eliminarDoc(id) {
-    if (!confirm('¿Eliminar este documento del sistema?')) return;
-    documentosFMA = documentosFMA.filter(function(d) { return d.id !== id; });
-    guardarDocStorage();
-    filtrarDocs();
-    showToast('Documento eliminado', false);
-  }
 
 
   function renderMTIAll() {
