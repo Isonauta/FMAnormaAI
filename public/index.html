@@ -1217,25 +1217,8 @@
           </div>
           <!-- Campo imagen (noticia) -->
           <div id="mti-field-img" class="form-group" style="margin-top:14px">
-            <label class="form-label">Imagen</label>
-            <div id="mti-img-drop" onclick="document.getElementById('mti-img-file').click()"
-              style="border:2px dashed var(--border-strong);border-radius:8px;padding:16px;text-align:center;cursor:pointer;background:var(--bg);transition:all 0.15s;margin-bottom:8px;"
-              onmouseover="this.style.borderColor='var(--gold)';this.style.background='var(--gold-light)'"
-              onmouseout="this.style.borderColor='var(--border-strong)';this.style.background='var(--bg)'"
-              ondragover="event.preventDefault();this.style.borderColor='var(--gold)';this.style.background='var(--gold-light)'"
-              ondragleave="this.style.borderColor='var(--border-strong)';this.style.background='var(--bg)'"
-              ondrop="mtiHandleDrop(event)">
-              <div id="mti-img-preview-wrap" style="display:none;margin-bottom:8px">
-                <img id="mti-img-preview" src="" style="max-height:100px;max-width:100%;border-radius:6px;object-fit:cover;" />
-              </div>
-              <div id="mti-img-drop-label" style="font-size:12px;color:var(--ink-3)">
-                📎 Clic para subir imagen<br><span style="font-size:10px">JPG, PNG — máx. 3MB</span>
-              </div>
-            </div>
-            <input type="file" id="mti-img-file" accept="image/*" style="display:none" onchange="mtiHandleFile(this)" />
-            <div style="font-size:10px;color:var(--ink-3);margin-bottom:4px">O pega una URL de imagen:</div>
-            <input class="field-input" type="text" id="mti-img-url" placeholder="https://..." style="font-size:12px"
-              oninput="mtiPreviewUrl(this.value)" />
+            <label class="form-label">Imagen (URL)</label>
+            <input class="field-input" type="text" id="mti-img-url" placeholder="https://..." />
           </div>
           <!-- Campo YouTube -->
           <div id="mti-field-yt" class="form-group" style="margin-top:14px;display:none">
@@ -2362,51 +2345,6 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     guardarMTIStorage();
   }
 
-  // ── IMAGEN BASE64 EN MODAL MTI ──────────────────────────
-  var mtiImgBase64 = null;
-
-  function mtiHandleFile(input) {
-    var file = input.files[0];
-    if (!file) return;
-    if (file.size > 3 * 1024 * 1024) { showToast('La imagen supera los 3MB', true); return; }
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      mtiImgBase64 = e.target.result;
-      document.getElementById('mti-img-url').value = '';
-      document.getElementById('mti-img-preview').src = mtiImgBase64;
-      document.getElementById('mti-img-preview-wrap').style.display = 'block';
-      document.getElementById('mti-img-drop-label').textContent = '✓ ' + file.name;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function mtiHandleDrop(event) {
-    event.preventDefault();
-    event.currentTarget.style.borderColor = 'var(--border-strong)';
-    event.currentTarget.style.background = 'var(--bg)';
-    var file = event.dataTransfer.files[0];
-    if (!file || !file.type.startsWith('image/')) { showToast('Solo imágenes JPG/PNG', true); return; }
-    var fakeInput = { files: [file] };
-    mtiHandleFile(fakeInput);
-  }
-
-  function mtiPreviewUrl(url) {
-    if (!url) { document.getElementById('mti-img-preview-wrap').style.display = 'none'; mtiImgBase64 = null; return; }
-    mtiImgBase64 = null;
-    document.getElementById('mti-img-preview').src = url;
-    document.getElementById('mti-img-preview-wrap').style.display = 'block';
-    document.getElementById('mti-img-drop-label').innerHTML = '📎 Clic para subir imagen<br><span style="font-size:10px">JPG, PNG — máx. 3MB</span>';
-  }
-
-  function mtiResetImgField() {
-    mtiImgBase64 = null;
-    document.getElementById('mti-img-url').value = '';
-    document.getElementById('mti-img-preview-wrap').style.display = 'none';
-    document.getElementById('mti-img-preview').src = '';
-    document.getElementById('mti-img-drop-label').innerHTML = '📎 Clic para subir imagen<br><span style="font-size:10px">JPG, PNG — máx. 3MB</span>';
-    document.getElementById('mti-img-file').value = '';
-  }
-
   function abrirModalMTI(id) {
     id = id || null;
     document.getElementById('modal-mti-titulo').textContent = id ? 'Editar publicación' : 'Nueva publicación';
@@ -2414,7 +2352,7 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     document.getElementById('mti-titulo').value = '';
     document.getElementById('mti-fecha').value = new Date().toISOString().split('T')[0];
     document.getElementById('mti-texto').value = '';
-    mtiResetImgField();
+    document.getElementById('mti-img-url').value = '';
     document.getElementById('mti-yt-url').value = '';
     document.getElementById('mti-audio-url').value = '';
     selectMTIType('noticia', document.querySelector('.type-opt[data-type="noticia"]'));
@@ -2437,15 +2375,23 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
   function cerrarModalMTI(e) {
     if (e && e.target !== document.getElementById('modal-mti')) return;
     document.getElementById('modal-mti').style.display = 'none';
-    mtiResetImgField();
+    var btn = document.querySelector('#modal-mti .btn-primary');
+    if (btn) { btn.disabled = false; btn.textContent = 'Publicar'; }
   }
 
   function guardarMTI() {
     var titulo = document.getElementById('mti-titulo').value.trim();
     var fecha = document.getElementById('mti-fecha').value;
     if (!titulo || !fecha) { showToast('Completa título y fecha', false); return; }
+
+    // Bloquear botón para evitar duplicados
+    var btn = document.querySelector('#modal-mti .btn-primary');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.textContent = 'Publicando...';
+
     var texto = document.getElementById('mti-texto').value.trim();
-    var img = mtiImgBase64 || document.getElementById('mti-img-url').value.trim();
+    var img = document.getElementById('mti-img-url').value.trim();
     var yt = document.getElementById('mti-yt-url').value.trim();
     var audio = document.getElementById('mti-audio-url').value.trim();
     var editId = document.getElementById('mti-edit-id').value;
@@ -2453,13 +2399,16 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     if (editId) {
       var idx = mtiItems.findIndex(function(x) { return x.id === editId; });
       if (idx >= 0) mtiItems[idx] = Object.assign(mtiItems[idx], item);
-      showToast('Publicación actualizada', true);
+      showToast('Publicación actualizada ✓', true);
     } else {
       item.id = 'm' + Date.now();
       mtiItems.unshift(item);
+      guardarMTIStorage();
       showToast('Publicado ✦', true);
     }
     document.getElementById('modal-mti').style.display = 'none';
+    btn.disabled = false;
+    btn.textContent = 'Publicar';
     renderMTI();
   }
 
@@ -2467,9 +2416,13 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
 
   function eliminarMTI(id) {
     if (!confirm('¿Eliminar esta publicación?')) return;
+    // Feedback inmediato — ocultar el elemento antes de filtrar
+    var rows = document.querySelectorAll('[data-mti-id="' + id + '"]');
+    rows.forEach(function(r) { r.style.opacity = '0.3'; r.style.pointerEvents = 'none'; });
     mtiItems = mtiItems.filter(function(x) { return x.id !== id; });
+    guardarMTIStorage();
     renderMTI();
-    showToast('Eliminado', false);
+    showToast('Publicación eliminada', false);
   }
 
   function cargarHeroVideo() {
