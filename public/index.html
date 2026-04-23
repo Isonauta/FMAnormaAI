@@ -963,6 +963,24 @@
     .manny-layout { grid-template-columns: 1fr; }
     .manny-sidebar { display: none; }
   }
+
+  /* ── GESTOR TABS ───────────────────────────────────── */
+  .gestor-tab {
+    padding: 10px 18px; background: transparent; border: none;
+    border-bottom: 2px solid transparent; font-family: 'DM Sans', sans-serif;
+    font-size: 13px; color: var(--ink-3); cursor: pointer;
+    transition: all 0.15s; margin-bottom: -1px;
+  }
+  .gestor-tab:hover { color: var(--ink); }
+  .gestor-tab.active { color: var(--gold); border-bottom-color: var(--gold); font-weight: 500; }
+  .rol-badge { display: inline-block; font-family: "DM Mono", monospace; font-size: 9px;
+    letter-spacing: 1px; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; }
+  .rol-admin { background: var(--gold-light); color: var(--gold-dark); border: 1px solid var(--gold); }
+  .rol-operador { background: var(--bg-3); color: var(--ink-3); border: 1px solid var(--border); }
+  .fecha-vencida { color: var(--danger); font-weight: 500; }
+  .fecha-ok { color: var(--success); }
+  .fecha-pronto { color: var(--warn); }
+
 </style>
 </head>
 <body>
@@ -1010,7 +1028,7 @@
     <div class="sidebar-section">
       <div class="sidebar-label">Asistencia IA</div>
       <button class="nav-item" onclick="showView('manny', this)"><span class="nav-icon">✦</span> Manny<span class="nav-count gold">IA</span></button>
-      <button class="nav-item" onclick="showView('gestor', this)"><span class="nav-icon">⚙</span> Gestor</button>
+      <button class="nav-item" onclick="showView('gestor', this);showGestor()"><span class="nav-icon">⚙</span> Gestor</button>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Acciones</div>
@@ -1671,12 +1689,91 @@
     <!-- GESTOR -->
     <div class="view" id="view-gestor">
       <div class="page-header">
-        <div><div class="page-title">Gestor</div><div class="page-sub">Configuración y administración del sistema FMA</div></div>
+        <div><div class="page-title">Gestor</div><div class="page-sub">Administración del sistema · Solo administradores</div></div>
       </div>
-      <div class="empty-state">
-        <div class="empty-icon">⚙</div>
-        <div class="empty-title">Gestor del sistema</div>
-        <div class="empty-sub">Administración de usuarios, normas, configuración de Supabase<br>y parámetros del sistema FMA.</div>
+      <div id="gestor-locked" style="display:none">
+        <div class="empty-state"><div class="empty-icon">🔐</div><div class="empty-title">Acceso restringido</div><div class="empty-sub">Esta sección es exclusiva para administradores del sistema.</div></div>
+      </div>
+      <div id="gestor-content" style="display:none">
+        <div style="display:flex;gap:0;margin-bottom:24px;border-bottom:1px solid var(--border)">
+          <button class="gestor-tab active" id="gtab-usuarios" onclick="switchGestorTab('usuarios')">👥 Usuarios</button>
+          <button class="gestor-tab" id="gtab-documentos" onclick="switchGestorTab('documentos')">📄 Revisión documental</button>
+          <button class="gestor-tab" id="gtab-areas" onclick="switchGestorTab('areas')">🏭 Áreas</button>
+        </div>
+        <!-- TAB USUARIOS -->
+        <div id="gestor-tab-usuarios">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div style="font-size:13px;color:var(--ink-3)">Gestión de accesos al sistema NormaAI FMA</div>
+            <button class="btn-primary" onclick="abrirModalUsuario()">+ Agregar usuario</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Área</th><th></th></tr></thead>
+            <tbody id="gestor-usuarios-body"><tr><td colspan="5" style="text-align:center;color:var(--ink-3);padding:32px">Cargando...</td></tr></tbody>
+          </table></div>
+        </div>
+        <!-- TAB DOCUMENTOS -->
+        <div id="gestor-tab-documentos" style="display:none">
+          <div style="font-size:13px;color:var(--ink-3);margin-bottom:16px">Actualiza las fechas de revisión para limpiar alertas de vencimiento</div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Código</th><th>Documento</th><th>Categoría</th><th>Fecha revisión</th><th>Versión</th><th></th></tr></thead>
+            <tbody id="gestor-docs-body"><tr><td colspan="6" style="text-align:center;color:var(--ink-3);padding:32px">Cargando...</td></tr></tbody>
+          </table></div>
+        </div>
+        <!-- TAB ÁREAS -->
+        <div id="gestor-tab-areas" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div style="font-size:13px;color:var(--ink-3)">Áreas y responsables para asignación de NCs</div>
+            <button class="btn-primary" onclick="abrirModalArea()">+ Agregar área</button>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Área / Proceso</th><th>Responsable por defecto</th><th></th></tr></thead>
+            <tbody id="gestor-areas-body"><tr><td colspan="3" style="text-align:center;color:var(--ink-3);padding:32px">Cargando...</td></tr></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL USUARIO -->
+    <div class="modal-overlay" id="modal-usuario" style="display:none" onclick="cerrarModalUsuario(event)">
+      <div class="modal-box" style="max-width:420px">
+        <div class="modal-header"><div class="modal-title" id="modal-usuario-titulo">Agregar usuario</div><button class="modal-close" onclick="cerrarModalUsuario()">✕</button></div>
+        <div class="modal-body">
+          <input type="hidden" id="usuario-edit-id" />
+          <div class="form-group"><label class="form-label">Nombre completo *</label><input class="field-input" type="text" id="usuario-nombre" placeholder="Ej: Juan Fernández" /></div>
+          <div class="form-group" style="margin-top:12px"><label class="form-label">Email *</label><input class="field-input" type="email" id="usuario-email" placeholder="correo@fmaindustrial.com" /></div>
+          <div class="form-group" style="margin-top:12px"><label class="form-label">Contraseña temporal *</label><input class="field-input" type="text" id="usuario-password" placeholder="Mínimo 8 caracteres..." /><div style="font-size:10px;color:var(--ink-3);margin-top:4px">Solo para cuentas nuevas. El usuario puede cambiarla después.</div></div>
+          <div class="form-group" style="margin-top:12px"><label class="form-label">Rol *</label><select class="field-select" id="usuario-rol"><option value="operador">Operador — solo lectura y registro de NCs</option><option value="admin">Administrador — acceso completo</option></select></div>
+          <div class="form-group" style="margin-top:12px"><label class="form-label">Área</label><input class="field-input" type="text" id="usuario-area" placeholder="Ej: Producción, Calidad..." /></div>
+        </div>
+        <div class="modal-footer"><button class="btn-ghost" onclick="cerrarModalUsuario()">Cancelar</button><button class="btn-primary" id="btn-guardar-usuario" onclick="guardarUsuario()">Crear usuario</button></div>
+      </div>
+    </div>
+
+    <!-- MODAL FECHA DOC -->
+    <div class="modal-overlay" id="modal-fecha-doc" style="display:none" onclick="cerrarModalFechaDoc(event)">
+      <div class="modal-box" style="max-width:380px">
+        <div class="modal-header"><div class="modal-title">Actualizar fecha de revisión</div><button class="modal-close" onclick="cerrarModalFechaDoc()">✕</button></div>
+        <div class="modal-body">
+          <input type="hidden" id="fecha-doc-id" />
+          <div style="font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px" id="fecha-doc-nombre"></div>
+          <div style="font-size:11px;color:var(--ink-3);margin-bottom:16px" id="fecha-doc-codigo"></div>
+          <div class="form-group"><label class="form-label">Nueva fecha de revisión *</label><input class="field-input" type="date" id="fecha-doc-valor" /></div>
+          <div class="form-group" style="margin-top:12px"><label class="form-label">Nueva versión (opcional)</label><input class="field-input" type="text" id="fecha-doc-version" placeholder="Ej: v4.1, Ver 20..." /></div>
+        </div>
+        <div class="modal-footer"><button class="btn-ghost" onclick="cerrarModalFechaDoc()">Cancelar</button><button class="btn-primary" onclick="guardarFechaDoc()">Actualizar</button></div>
+      </div>
+    </div>
+
+    <!-- MODAL ÁREA -->
+    <div class="modal-overlay" id="modal-area" style="display:none" onclick="cerrarModalArea(event)">
+      <div class="modal-box" style="max-width:400px">
+        <div class="modal-header"><div class="modal-title" id="modal-area-titulo">Agregar área</div><button class="modal-close" onclick="cerrarModalArea()">✕</button></div>
+        <div class="modal-body">
+          <input type="hidden" id="area-edit-id" />
+          <div class="form-group"><label class="form-label">Nombre del área *</label><input class="field-input" type="text" id="area-nombre" placeholder="Ej: Fabricación Santiago..." /></div>
+          <div class="form-group" style="margin-top:12px"><label class="form-label">Responsable por defecto</label><input class="field-input" type="text" id="area-responsable" placeholder="Nombre del responsable..." /></div>
+        </div>
+        <div class="modal-footer"><button class="btn-ghost" onclick="cerrarModalArea()">Cancelar</button><button class="btn-primary" onclick="guardarArea()">Guardar</button></div>
       </div>
     </div>
 
@@ -3072,6 +3169,271 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     }
   }
 
+
+
+  // ── GESTOR ─────────────────────────────────────────────
+  var gestorAreasLocal = [
+    { id:'a1', nombre:'Fabricación Santiago', responsable:'J. Fernández' },
+    { id:'a2', nombre:'Fabricación Antofagasta', responsable:'M. González' },
+    { id:'a3', nombre:'Bodega y Despacho', responsable:'A. Morales' },
+    { id:'a4', nombre:'Diseño e Ingeniería', responsable:'C. Rodríguez' },
+    { id:'a5', nombre:'Post Venta / Terreno', responsable:'P. Soto' },
+    { id:'a6', nombre:'Calidad', responsable:'Cristian Neira' },
+    { id:'a7', nombre:'Seguridad y Salud', responsable:'Israel Contreras' },
+    { id:'a8', nombre:'Medio Ambiente', responsable:'' },
+    { id:'a9', nombre:'Administración', responsable:'' },
+    { id:'a10', nombre:'Comercial / Ventas', responsable:'' }
+  ];
+
+  function showGestor() {
+    if (!isAdmin) {
+      document.getElementById('gestor-locked').style.display = 'block';
+      document.getElementById('gestor-content').style.display = 'none';
+    } else {
+      document.getElementById('gestor-locked').style.display = 'none';
+      document.getElementById('gestor-content').style.display = 'block';
+      cargarGestorUsuarios();
+      cargarGestorDocs();
+      cargarGestorAreas();
+    }
+  }
+
+  function switchGestorTab(tab) {
+    ['usuarios','documentos','areas'].forEach(function(t) {
+      document.getElementById('gestor-tab-' + t).style.display = t === tab ? 'block' : 'none';
+      var btn = document.getElementById('gtab-' + t);
+      if (btn) btn.classList.toggle('active', t === tab);
+    });
+  }
+
+  // ── USUARIOS ──
+  async function cargarGestorUsuarios() {
+    var body = document.getElementById('gestor-usuarios-body');
+    try {
+      var sb = getSupabase();
+      var res = await sb.from('usuarios').select('*').order('created_at', { ascending: false });
+      if (res.error) throw res.error;
+      var usuarios = res.data || [];
+      if (usuarios.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--ink-3);padding:32px">No hay usuarios registrados.</td></tr>';
+        return;
+      }
+      body.innerHTML = usuarios.map(function(u) {
+        var rolBadge = u.rol === 'admin'
+          ? '<span class="rol-badge rol-admin">Admin</span>'
+          : '<span class="rol-badge rol-operador">Operador</span>';
+        return '<tr>'
+          + '<td style="font-weight:500;color:var(--ink)">' + (u.nombre || '—') + '</td>'
+          + '<td style="font-family:monospace;font-size:12px;color:var(--ink-3)">' + (u.email || '—') + '</td>'
+          + '<td>' + rolBadge + '</td>'
+          + '<td style="font-size:12px;color:var(--ink-3)">' + (u.area || '—') + '</td>'
+          + '<td style="display:flex;gap:6px">'
+          + '<button class="btn-ghost" style="font-size:11px;padding:4px 10px" onclick="editarUsuario(' + JSON.stringify(u).replace(/"/g,"&quot;") + ')">✏️ Editar</button>'
+          + '</td>'
+          + '</tr>';
+      }).join('');
+    } catch(e) {
+      body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--danger);padding:32px">Error cargando usuarios: ' + e.message + '</td></tr>';
+    }
+  }
+
+  function abrirModalUsuario() {
+    document.getElementById('modal-usuario-titulo').textContent = 'Agregar usuario';
+    document.getElementById('usuario-edit-id').value = '';
+    document.getElementById('usuario-nombre').value = '';
+    document.getElementById('usuario-email').value = '';
+    document.getElementById('usuario-password').value = '';
+    document.getElementById('usuario-rol').value = 'operador';
+    document.getElementById('usuario-area').value = '';
+    document.getElementById('btn-guardar-usuario').textContent = 'Crear usuario';
+    document.getElementById('usuario-email').disabled = false;
+    document.getElementById('usuario-password').disabled = false;
+    document.getElementById('modal-usuario').style.display = 'flex';
+  }
+
+  function editarUsuario(u) {
+    document.getElementById('modal-usuario-titulo').textContent = 'Editar usuario';
+    document.getElementById('usuario-edit-id').value = u.id || '';
+    document.getElementById('usuario-nombre').value = u.nombre || '';
+    document.getElementById('usuario-email').value = u.email || '';
+    document.getElementById('usuario-password').value = '';
+    document.getElementById('usuario-rol').value = u.rol || 'operador';
+    document.getElementById('usuario-area').value = u.area || '';
+    document.getElementById('btn-guardar-usuario').textContent = 'Guardar cambios';
+    document.getElementById('usuario-email').disabled = true;
+    document.getElementById('usuario-password').disabled = true;
+    document.getElementById('modal-usuario').style.display = 'flex';
+  }
+
+  function cerrarModalUsuario(e) {
+    if (e && e.target !== document.getElementById('modal-usuario')) return;
+    document.getElementById('modal-usuario').style.display = 'none';
+  }
+
+  async function guardarUsuario() {
+    var nombre = document.getElementById('usuario-nombre').value.trim();
+    var email = document.getElementById('usuario-email').value.trim();
+    var password = document.getElementById('usuario-password').value.trim();
+    var rol = document.getElementById('usuario-rol').value;
+    var area = document.getElementById('usuario-area').value.trim();
+    var editId = document.getElementById('usuario-edit-id').value;
+    if (!nombre || !email) { showToast('Completa nombre y email', false); return; }
+    var btn = document.getElementById('btn-guardar-usuario');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    try {
+      var sb = getSupabase();
+      if (editId) {
+        // Solo actualizar tabla usuarios (no Auth)
+        var res = await sb.from('usuarios').update({ nombre: nombre, rol: rol, area: area }).eq('id', editId);
+        if (res.error) throw res.error;
+        showToast('Usuario actualizado ✓', true);
+      } else {
+        // Crear en Auth + tabla usuarios
+        if (!password || password.length < 8) { showToast('La contraseña debe tener al menos 8 caracteres', false); btn.disabled = false; btn.textContent = 'Crear usuario'; return; }
+        var authRes = await sb.auth.admin ? null : null; // No tenemos service key, usamos insert directo
+        // Insertar en tabla usuarios (el usuario deberá ser creado en Supabase Auth por el admin)
+        var insRes = await sb.from('usuarios').insert([{ nombre: nombre, email: email, rol: rol, area: area }]);
+        if (insRes.error) throw insRes.error;
+        showToast('Usuario registrado. Crea su cuenta en Supabase Auth con email: ' + email, true);
+      }
+      document.getElementById('modal-usuario').style.display = 'none';
+      await cargarGestorUsuarios();
+    } catch(e) {
+      showToast('Error: ' + (e.message || 'No se pudo guardar'), false);
+    }
+    btn.disabled = false; btn.textContent = editId ? 'Guardar cambios' : 'Crear usuario';
+  }
+
+  // ── DOCUMENTOS REVISIÓN ──
+  async function cargarGestorDocs() {
+    var body = document.getElementById('gestor-docs-body');
+    try {
+      var sb = getSupabase();
+      var res = await sb.from('documentos').select('id,codigo,titulo,categoria,fecha_revision,version').eq('visible', true).order('fecha_revision', { ascending: true });
+      if (res.error) throw res.error;
+      var docs = res.data || [];
+      var hoy = new Date(); hoy.setHours(0,0,0,0);
+      body.innerHTML = docs.map(function(d) {
+        var fechaStr = '—'; var estadoClass = ''; var estadoLabel = '';
+        if (d.fecha_revision) {
+          var f = new Date(d.fecha_revision + 'T12:00:00');
+          var diff = Math.floor((f - hoy) / (1000*60*60*24));
+          fechaStr = f.toLocaleDateString('es-CL', { day:'2-digit', month:'short', year:'numeric' });
+          if (diff < 0) { estadoClass = 'fecha-vencida'; estadoLabel = 'Vencido hace ' + Math.abs(diff) + 'd'; }
+          else if (diff <= 30) { estadoClass = 'fecha-pronto'; estadoLabel = 'Vence en ' + diff + 'd'; }
+          else { estadoClass = 'fecha-ok'; estadoLabel = 'Vigente'; }
+        }
+        return '<tr>'
+          + '<td class="fma-code">' + (d.codigo || '—') + '</td>'
+          + '<td style="font-weight:500;color:var(--ink)">' + d.titulo + '</td>'
+          + '<td><span class="clause-tag">' + (d.categoria || '—') + '</span></td>'
+          + '<td class="' + estadoClass + '">' + fechaStr + '</td>'
+          + '<td style="font-family:monospace;font-size:11px;color:var(--ink-3)">' + (d.version || '—') + '</td>'
+          + '<td><button class="btn-ghost" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="abrirModalFechaDoc('' + d.id + '','' + d.titulo.replace(/'/g,"\'") + '','' + (d.codigo||'') + '','' + (d.fecha_revision||'') + '','' + (d.version||'') + '')">📅 Actualizar</button></td>'
+          + '</tr>';
+      }).join('');
+    } catch(e) {
+      body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--danger);padding:32px">Error: ' + e.message + '</td></tr>';
+    }
+  }
+
+  function abrirModalFechaDoc(id, nombre, codigo, fechaActual, versionActual) {
+    document.getElementById('fecha-doc-id').value = id;
+    document.getElementById('fecha-doc-nombre').textContent = nombre;
+    document.getElementById('fecha-doc-codigo').textContent = codigo;
+    document.getElementById('fecha-doc-valor').value = fechaActual || new Date().toISOString().split('T')[0];
+    document.getElementById('fecha-doc-version').value = versionActual || '';
+    document.getElementById('modal-fecha-doc').style.display = 'flex';
+  }
+
+  function cerrarModalFechaDoc(e) {
+    if (e && e.target !== document.getElementById('modal-fecha-doc')) return;
+    document.getElementById('modal-fecha-doc').style.display = 'none';
+  }
+
+  async function guardarFechaDoc() {
+    var id = document.getElementById('fecha-doc-id').value;
+    var fecha = document.getElementById('fecha-doc-valor').value;
+    var version = document.getElementById('fecha-doc-version').value.trim();
+    if (!fecha) { showToast('Selecciona una fecha', false); return; }
+    try {
+      var sb = getSupabase();
+      var upd = { fecha_revision: fecha };
+      if (version) upd.version = version;
+      var res = await sb.from('documentos').update(upd).eq('id', id);
+      if (res.error) throw res.error;
+      showToast('Fecha de revisión actualizada ✓', true);
+      document.getElementById('modal-fecha-doc').style.display = 'none';
+      await cargarGestorDocs();
+      await cargarDocumentos();
+    } catch(e) {
+      showToast('Error: ' + e.message, false);
+    }
+  }
+
+  // ── ÁREAS ──
+  function cargarGestorAreas() {
+    var body = document.getElementById('gestor-areas-body');
+    var saved = localStorage.getItem('fma_areas');
+    if (saved) gestorAreasLocal = JSON.parse(saved);
+    body.innerHTML = gestorAreasLocal.map(function(a) {
+      return '<tr>'
+        + '<td style="font-weight:500;color:var(--ink)">' + a.nombre + '</td>'
+        + '<td style="font-size:13px;color:var(--ink-3)">' + (a.responsable || '—') + '</td>'
+        + '<td style="display:flex;gap:6px">'
+        + '<button class="btn-ghost" style="font-size:11px;padding:4px 10px" onclick="editarArea('' + a.id + '')">✏️</button>'
+        + '<button style="font-size:11px;padding:4px 10px;background:transparent;border:1px solid var(--danger-border);border-radius:5px;color:var(--danger);cursor:pointer" onclick="eliminarArea('' + a.id + '')">🗑️</button>'
+        + '</td></tr>';
+    }).join('');
+  }
+
+  function abrirModalArea() {
+    document.getElementById('modal-area-titulo').textContent = 'Agregar área';
+    document.getElementById('area-edit-id').value = '';
+    document.getElementById('area-nombre').value = '';
+    document.getElementById('area-responsable').value = '';
+    document.getElementById('modal-area').style.display = 'flex';
+  }
+
+  function editarArea(id) {
+    var area = gestorAreasLocal.find(function(a) { return a.id === id; });
+    if (!area) return;
+    document.getElementById('modal-area-titulo').textContent = 'Editar área';
+    document.getElementById('area-edit-id').value = id;
+    document.getElementById('area-nombre').value = area.nombre;
+    document.getElementById('area-responsable').value = area.responsable || '';
+    document.getElementById('modal-area').style.display = 'flex';
+  }
+
+  function cerrarModalArea(e) {
+    if (e && e.target !== document.getElementById('modal-area')) return;
+    document.getElementById('modal-area').style.display = 'none';
+  }
+
+  function guardarArea() {
+    var nombre = document.getElementById('area-nombre').value.trim();
+    var responsable = document.getElementById('area-responsable').value.trim();
+    var editId = document.getElementById('area-edit-id').value;
+    if (!nombre) { showToast('Ingresa el nombre del área', false); return; }
+    if (editId) {
+      var idx = gestorAreasLocal.findIndex(function(a) { return a.id === editId; });
+      if (idx >= 0) { gestorAreasLocal[idx].nombre = nombre; gestorAreasLocal[idx].responsable = responsable; }
+    } else {
+      gestorAreasLocal.push({ id: 'a' + Date.now(), nombre: nombre, responsable: responsable });
+    }
+    localStorage.setItem('fma_areas', JSON.stringify(gestorAreasLocal));
+    document.getElementById('modal-area').style.display = 'none';
+    cargarGestorAreas();
+    showToast(editId ? 'Área actualizada ✓' : 'Área agregada ✓', true);
+  }
+
+  function eliminarArea(id) {
+    if (!confirm('¿Eliminar esta área?')) return;
+    gestorAreasLocal = gestorAreasLocal.filter(function(a) { return a.id !== id; });
+    localStorage.setItem('fma_areas', JSON.stringify(gestorAreasLocal));
+    cargarGestorAreas();
+    showToast('Área eliminada', false);
+  }
 
 function parseMarkdown(text) {
   if (!text) return text;
