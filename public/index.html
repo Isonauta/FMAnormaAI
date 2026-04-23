@@ -3034,7 +3034,7 @@ function inlineMd(text) {
       });
       const data = await response.json();
       const tel = document.getElementById(typId); if (tel) tel.remove();
-      const raw = data.reply || data.respuesta || data.mensaje || 'Sin respuesta';
+      const raw = data.reply || data.respuesta || data.mensaje || (data.content && data.content[0] && data.content[0].text) || 'Sin respuesta';
       const reply = parseMarkdown(raw);
       const aiDiv = document.createElement('div');
       aiDiv.className = 'chat-msg ai';
