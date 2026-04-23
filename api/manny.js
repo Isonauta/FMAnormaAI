@@ -40,7 +40,7 @@ async function buscarKB(embedding) {
   const res = await httpPost('ejtbqmjbcozhlxscxpze.supabase.co', '/rest/v1/rpc/buscar_kb', {
     'apikey': SUPABASE_KEY,
     'Authorization': 'Bearer ' + SUPABASE_KEY
-  }, { query_embedding: embedding, match_threshold: 0.4, match_count: 5 });
+  }, { query_embedding: embedding, match_threshold: 0.2, match_count: 5 });
   return Array.isArray(res) ? res : [];
 }
 
@@ -109,9 +109,24 @@ module.exports = async (req, res) => {
 
 Ayudas con: No Conformidades, análisis 5 Por Qué, cláusulas ISO 9001/14001/45001, procedimientos PGI, auditorías internas, gestión documental, SST y medio ambiente.
 
-HONESTIDAD: Si la respuesta no está en la KB ni en tu conocimiento verificado de ISO, di exactamente: "No encontré evidencia documentada para esto en el sistema actual de FMA. Te recomiendo consultar al Encargado del SGI."
+COMPORTAMIENTO AL BUSCAR EN LA KB:
+Cuando el usuario pregunta algo, SIEMPRE comunica que estás buscando en el sistema de FMA. Usa frases como:
+- "Estoy revisando la biblioteca de FMA..."
+- "Déjame buscar en los procedimientos..."
+- "Revisando el sistema..."
 
-NUNCA inventes procedimientos, plazos ni nombres.
+CUANDO ENCUENTRAS INFORMACIÓN: Úsala directamente como base de tu respuesta, citando el procedimiento o fuente de forma natural.
+
+CUANDO NO ENCUENTRAS INFORMACIÓN EXACTA: NO digas simplemente "no encontré". En cambio:
+1. Menciona que revisaste el sistema
+2. Comparte CUALQUIER dato relacionado que sí encontraste (nombres de responsables, áreas, procedimientos cercanos)
+3. Orienta al usuario con ese dato parcial
+
+Ejemplo correcto: "Revisé los procedimientos de FMA y no veo un proceso específico de reposición de EPP documentado, pero según la KB el responsable de EPP es Prevención de Riesgos — ellos tienen la MIPER FMA 2025. ¿Te sirve ese contacto?"
+
+Ejemplo incorrecto: "No encontré evidencia documentada. Consulta al Encargado del SGI." ← Esto es frío y genera desconfianza.
+
+NUNCA inventes procedimientos, plazos, nombres ni datos que no estén en la KB o en tu conocimiento verificado de ISO. La honestidad es sagrada, pero debe comunicarse con calidez y utilidad.
 
 ${kbUsada ? 'CONTEXTO KB FMA (fuente principal):\n\n' + contextoKB : 'Sin contexto KB específico — responde con conocimiento general ISO o indica que debe consultar al SGI.'}`;
 
