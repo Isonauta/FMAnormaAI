@@ -2422,22 +2422,44 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     document.getElementById('mti-field-audio').style.display = type === 'podcast' ? 'block' : 'none';
   }
 
-  function cargarMTI() {
-    var saved = localStorage.getItem('fma_mti');
-    mtiItems = saved ? JSON.parse(saved) : [
-      { id: 'm1', tipo: 'noticia', titulo: 'Auditoría interna Q1 2026 — Resultados', fecha: '2026-04-15', texto: 'Se completó exitosamente la auditoría interna del primer trimestre. Se identificaron 2 NCs menores en el área de producción, actualmente en análisis.', img: '', yt: '', audio: '' },
-      { id: 'm2', tipo: 'noticia', titulo: 'Capacitación 5 Porqués — Equipos de Calidad', fecha: '2026-04-08', texto: 'Jornada de capacitación en metodología de análisis de causa raíz. Participaron 18 personas de producción, mantención y calidad.', img: '', yt: '', audio: '' }
-    ];
+  async function cargarMTI() {
+    try {
+      var sb = getSupabase();
+      var res = await sb.from('noticias').select('*').eq('visible', true).order('fecha', { ascending: false });
+      if (res.error) throw res.error;
+      mtiItems = (res.data || []).map(function(n) {
+        return {
+          id: n.id, tipo: n.tipo || 'noticia', titulo: n.titulo,
+          fecha: n.fecha, texto: n.descripcion || '', img: n.imagen_url || '',
+          yt: n.youtube_url || '', audio: n.audio_url || '', destacar: n.destacar || false
+        };
+      });
+      if (mtiItems.length === 0) {
+        mtiItems = [
+          { id: 'm1', tipo: 'noticia', titulo: 'Auditoría interna Q1 2026 — Resultados', fecha: '2026-04-15', texto: 'Se completó exitosamente la auditoría interna del primer trimestre.', img: '', yt: '', audio: '', destacar: false }
+        ];
+      }
+    } catch(e) {
+      console.warn('Error cargando noticias Supabase:', e);
+      var saved = localStorage.getItem('fma_mti');
+      mtiItems = saved ? JSON.parse(saved) : [];
+    }
+    actualizarContadorNoticias();
     renderMTI(3);
   }
 
-  function guardarMTIStorage() {
-    localStorage.setItem('fma_mti', JSON.stringify(mtiItems));
+  function actualizarContadorNoticias() {
     var count = document.getElementById('noticias-count');
     if (count) {
       if (mtiItems.length > 0) { count.textContent = mtiItems.length; count.style.display = 'inline'; }
       else count.style.display = 'none';
     }
+  }
+
+  function guardarMTIStorage() {
+    // Mantener como fallback local
+    localStorage.setItem('fma_mti', JSON.stringify(mtiItems));
+    actualizarContadorNoticias();
   }
 
   function getYTEmbed(url) {
@@ -2478,7 +2500,7 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     parent.style.pointerEvents = 'all';
   }
 
-  function toggleDestacar(id) {
+  async function toggleDestacar(id) {
     var item = mtiItems.find(function(x) { return x.id === id; });
     if (!item) return;
     var destacados = mtiItems.filter(function(x) { return x.destacar; });
@@ -2486,10 +2508,17 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
       showToast('Máximo 3 publicaciones destacadas en el Dashboard', false);
       return;
     }
-    item.destacar = !item.destacar;
-    guardarMTIStorage();
+    var nuevoEstado = !item.destacar;
+    try {
+      var sb = getSupabase();
+      var res = await sb.from('noticias').update({ destacar: nuevoEstado }).eq('id', id);
+      if (res.error) throw res.error;
+    } catch(e) {
+      console.warn('Error actualizando destacar:', e);
+    }
+    await cargarMTI();
     renderMTI();
-    showToast(item.destacar ? '⭐ Destacado en Dashboard' : 'Quitado del Dashboard', item.destacar);
+    showToast(nuevoEstado ? '⭐ Destacado en Dashboard' : 'Quitado del Dashboard', nuevoEstado);
   }
 
   function renderMTI(limite) {
@@ -2574,7 +2603,7 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     if (btn) { btn.disabled = false; btn.textContent = 'Publicar'; }
   }
 
-  function guardarMTI() {
+  async function guardarMTI() {
     var titulo = document.getElementById('mti-titulo').value.trim();
     var fecha = document.getElementById('mti-fecha').value;
     if (!titulo || !fecha) { showToast('Completa título y fecha', false); return; }
@@ -2596,27 +2625,48 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
       btn.disabled = false; btn.textContent = 'Publicar';
       return;
     }
-    var item = { tipo: mtiType, titulo: titulo, fecha: fecha, texto: texto, img: img, yt: yt, audio: audio, destacar: destacar };
+    var itemData = {
+      tipo: mtiType, titulo: titulo, fecha: fecha,
+      descripcion: texto, imagen_url: img || null,
+      youtube_url: yt || null, audio_url: audio || null,
+      destacar: destacar, visible: true,
+      creado_por: currentUser ? currentUser.email : 'admin'
+    };
 
-    if (editId) {
-      var idx = mtiItems.findIndex(function(x) { return x.id === editId; });
-      if (idx >= 0) mtiItems[idx] = Object.assign(mtiItems[idx], item);
-    } else {
-      item.id = 'm' + Date.now();
-      mtiItems.unshift(item);
+    try {
+      var sb = getSupabase();
+      if (editId) {
+        var res = await sb.from('noticias').update(itemData).eq('id', editId);
+        if (res.error) throw res.error;
+      } else {
+        var res2 = await sb.from('noticias').insert([itemData]);
+        if (res2.error) throw res2.error;
+      }
+    } catch(e) {
+      console.warn('Supabase save error, usando localStorage:', e);
+      // Fallback local
+      var localItem = { id: editId || ('m' + Date.now()), tipo: mtiType, titulo: titulo, fecha: fecha, texto: texto, img: img, yt: yt, audio: audio, destacar: destacar };
+      if (editId) {
+        var idx = mtiItems.findIndex(function(x) { return x.id === editId; });
+        if (idx >= 0) mtiItems[idx] = Object.assign(mtiItems[idx], localItem);
+      } else {
+        mtiItems.unshift(localItem);
+      }
+      guardarMTIStorage();
     }
-    guardarMTIStorage();
 
     // Cerrar modal inmediatamente
     document.getElementById('modal-mti').style.display = 'none';
     btn.disabled = false;
     btn.textContent = 'Publicar';
-    renderMTI();
 
-    // Navegar a Manny te informa y mostrar confirmación
+    // Recargar desde Supabase
+    await cargarMTI();
+    renderMTIAll();
+
+    // Navegar a Manny te informa
     var navBtn = document.querySelector('.nav-item[onclick*="noticias"]');
     showView('noticias', navBtn);
-    renderMTIAll();
     setTimeout(function() {
       showToast(editId ? '✓ Publicación actualizada' : '✦ Publicado en Manny te informa', true);
     }, 200);
@@ -2624,14 +2674,20 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
 
   function editarMTI(id) { abrirModalMTI(id); }
 
-  function eliminarMTI(id) {
+  async function eliminarMTI(id) {
     if (!confirm('¿Eliminar esta publicación?')) return;
-    // Feedback inmediato — ocultar el elemento antes de filtrar
+    // Feedback inmediato
     var rows = document.querySelectorAll('[data-mti-id="' + id + '"]');
     rows.forEach(function(r) { r.style.opacity = '0.3'; r.style.pointerEvents = 'none'; });
-    mtiItems = mtiItems.filter(function(x) { return x.id !== id; });
-    guardarMTIStorage();
-    renderMTI();
+    try {
+      var sb = getSupabase();
+      var res = await sb.from('noticias').update({ visible: false }).eq('id', id);
+      if (res.error) throw res.error;
+    } catch(e) {
+      console.warn('Error eliminando de Supabase:', e);
+    }
+    await cargarMTI();
+    renderMTIAll();
     showToast('Publicación eliminada', false);
   }
 
