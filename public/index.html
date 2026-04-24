@@ -1236,6 +1236,13 @@
             <label class="form-label">Descripción / Contenido</label>
             <textarea class="field-textarea" rows="4" id="mti-texto" placeholder="Escribe una descripción..."></textarea>
           </div>
+          <div class="form-group" style="margin-top:14px;display:flex;align-items:center;gap:10px;padding:12px;background:var(--gold-light);border-radius:8px;border:1px solid var(--gold)">
+            <input type="checkbox" id="mti-destacar" style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer" />
+            <div>
+              <label for="mti-destacar" style="font-size:13px;font-weight:500;color:var(--ink);cursor:pointer">⭐ Destacar en Dashboard</label>
+              <div style="font-size:10px;color:var(--ink-3);margin-top:1px">Aparece en la sección "Manny te informa" del Dashboard (máx. 3)</div>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button class="btn-ghost" onclick="cerrarModalMTI()">Cancelar</button>
@@ -2311,6 +2318,43 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     return id ? 'https://www.youtube.com/embed/' + id + '?rel=0' : '';
   }
 
+  function getYTId(url) {
+    if (!url) return '';
+    var m1 = url.match(/[?&]v=([^&]+)/);
+    var m2 = url.match(/youtu\.be\/([^?]+)/);
+    var m3 = url.match(/embed\/([^?]+)/);
+    if (m1) return m1[1];
+    if (m2) return m2[1];
+    if (m3) return m3[1];
+    return '';
+  }
+
+  function activarYTAll(id, ytId) {
+    var container = document.getElementById('yt-thumb-all-' + id);
+    if (!container) return;
+    container.outerHTML = '<iframe src="https://www.youtube.com/embed/' + ytId + '?autoplay=1&rel=0" allowfullscreen allow="autoplay" style="width:100%;height:100%;border:none;display:block"></iframe>';
+  }
+
+  function activarYT(id, ytId) {
+    var container = document.getElementById('yt-thumb-' + id);
+    if (!container) return;
+    container.outerHTML = '<iframe src="https://www.youtube.com/embed/' + ytId + '?autoplay=1&rel=0" allowfullscreen allow="autoplay" style="width:100%;height:100%;border:none;display:block"></iframe>';
+  }
+
+  function toggleDestacar(id) {
+    var item = mtiItems.find(function(x) { return x.id === id; });
+    if (!item) return;
+    var destacados = mtiItems.filter(function(x) { return x.destacar; });
+    if (!item.destacar && destacados.length >= 3) {
+      showToast('Máximo 3 publicaciones destacadas en el Dashboard', false);
+      return;
+    }
+    item.destacar = !item.destacar;
+    guardarMTIStorage();
+    renderMTI();
+    showToast(item.destacar ? '⭐ Destacado en Dashboard' : 'Quitado del Dashboard', item.destacar);
+  }
+
   function renderMTI(limite) {
     var grid = document.getElementById('mti-grid');
     if (!grid) return;
@@ -2319,7 +2363,10 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
       guardarMTIStorage(); return;
     }
     var sorted = mtiItems.slice().sort(function(a,b) { return new Date(b.fecha) - new Date(a.fecha); });
-    if (limite) sorted = sorted.slice(0, limite);
+    if (limite) {
+      var destacados = sorted.filter(function(x) { return x.destacar; });
+      sorted = destacados.length > 0 ? destacados.slice(0, limite) : sorted.slice(0, limite);
+    }
     var html = '';
     sorted.forEach(function(item) {
       var fecha = new Date(item.fecha + 'T12:00:00').toLocaleDateString('es-CL', { year:'numeric', month:'long', day:'numeric' });
@@ -2327,8 +2374,17 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
       var badgeClass = { noticia:'badge-noticia', video:'badge-video', podcast:'badge-podcast' }[item.tipo] || 'badge-noticia';
       var mediaHTML = '';
       if (item.tipo === 'video' && item.yt) {
-        var embed = getYTEmbed(item.yt);
-        mediaHTML = embed ? '<iframe src="' + embed + '" allowfullscreen></iframe>' : '<div class="media-placeholder"><div class="big-icon">▶️</div></div>';
+        var ytId = getYTId(item.yt);
+        if (ytId) {
+          mediaHTML = '<div id="yt-thumb-' + item.id + '" style="position:relative;cursor:pointer;width:100%;height:100%" onclick="activarYT(\'' + item.id + '\',\'' + ytId + '\')">'
+            + '<img src="https://img.youtube.com/vi/' + ytId + '/hqdefault.jpg" style="width:100%;height:100%;object-fit:cover;display:block" alt="' + item.titulo + '" />'
+            + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25)">'
+            + '<div style="width:60px;height:60px;background:#FF0000;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.4)">'
+            + '<div style="width:0;height:0;border-top:13px solid transparent;border-bottom:13px solid transparent;border-left:22px solid white;margin-left:5px"></div>'
+            + '</div></div></div>';
+        } else {
+          mediaHTML = '<div class="media-placeholder"><div class="big-icon">▶️</div></div>';
+        }
       } else if (item.tipo === 'podcast' && item.audio) {
         mediaHTML = '<div class="media-placeholder" style="background:#111110"><div class="big-icon">🎙️</div></div>';
       } else if (item.img) {
@@ -2338,7 +2394,8 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
         mediaHTML = '<div class="media-placeholder"><div class="big-icon">' + (icons[item.tipo]||'📰') + '</div></div>';
       }
       var audioPlayer = (item.tipo === 'podcast' && item.audio) ? '<div class="audio-player"><audio controls src="' + item.audio + '" style="flex:1;height:32px"></audio></div>' : '';
-      var adminBtns = isAdmin ? '<div class="mti-card-footer"><button class="btn-edit-noticia" onclick="editarMTI(\'' + item.id + '\')">✏️ Editar</button><button class="btn-del-noticia" onclick="eliminarMTI(\'' + item.id + '\')">🗑️</button></div>' : '';
+      var destacarBtn = isAdmin ? '<button class="btn-edit-noticia" style="' + (item.destacar ? 'background:var(--gold-light);border-color:var(--gold);color:var(--gold-dark)' : '') + '" onclick="toggleDestacar(\'' + item.id + '\')" title="' + (item.destacar ? 'Quitar del Dashboard' : 'Destacar en Dashboard') + '">' + (item.destacar ? '⭐ Destacado' : '☆ Dashboard') + '</button>' : '';
+      var adminBtns = isAdmin ? '<div class="mti-card-footer">' + destacarBtn + '<button class="btn-edit-noticia" onclick="editarMTI(\'' + item.id + '\')">✏️ Editar</button><button class="btn-del-noticia" onclick="eliminarMTI(\'' + item.id + '\')">🗑️</button></div>' : '';
       html += '<div class="mti-card"><div class="mti-card-media">' + mediaHTML + '<span class="mti-type-badge ' + badgeClass + '">' + badgeLabel + '</span></div>' + audioPlayer + '<div class="mti-card-body"><div class="mti-card-date">' + fecha + '</div><div class="mti-card-title">' + item.titulo + '</div>' + (item.texto ? '<div class="mti-card-text">' + item.texto + '</div>' : '') + adminBtns + '</div></div>';
     });
     grid.innerHTML = html;
@@ -2355,6 +2412,7 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     document.getElementById('mti-img-url').value = '';
     document.getElementById('mti-yt-url').value = '';
     document.getElementById('mti-audio-url').value = '';
+    document.getElementById('mti-destacar').checked = false;
     selectMTIType('noticia', document.querySelector('.type-opt[data-type="noticia"]'));
     if (id) {
       var item = mtiItems.find(function(x) { return x.id === id; });
@@ -2384,32 +2442,47 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     var fecha = document.getElementById('mti-fecha').value;
     if (!titulo || !fecha) { showToast('Completa título y fecha', false); return; }
 
-    // Bloquear botón para evitar duplicados
     var btn = document.querySelector('#modal-mti .btn-primary');
     if (btn.disabled) return;
     btn.disabled = true;
-    btn.textContent = 'Publicando...';
+    btn.textContent = 'Guardando...';
 
     var texto = document.getElementById('mti-texto').value.trim();
     var img = document.getElementById('mti-img-url').value.trim();
     var yt = document.getElementById('mti-yt-url').value.trim();
     var audio = document.getElementById('mti-audio-url').value.trim();
     var editId = document.getElementById('mti-edit-id').value;
-    var item = { tipo: mtiType, titulo: titulo, fecha: fecha, texto: texto, img: img, yt: yt, audio: audio };
+    var destacar = document.getElementById('mti-destacar').checked;
+    var destacados = mtiItems.filter(function(x) { return x.destacar && x.id !== editId; });
+    if (destacar && destacados.length >= 3) {
+      showToast('Ya hay 3 publicaciones destacadas. Quita una primero.', false);
+      btn.disabled = false; btn.textContent = 'Publicar';
+      return;
+    }
+    var item = { tipo: mtiType, titulo: titulo, fecha: fecha, texto: texto, img: img, yt: yt, audio: audio, destacar: destacar };
+
     if (editId) {
       var idx = mtiItems.findIndex(function(x) { return x.id === editId; });
       if (idx >= 0) mtiItems[idx] = Object.assign(mtiItems[idx], item);
-      showToast('Publicación actualizada ✓', true);
     } else {
       item.id = 'm' + Date.now();
       mtiItems.unshift(item);
-      guardarMTIStorage();
-      showToast('Publicado ✦', true);
     }
+    guardarMTIStorage();
+
+    // Cerrar modal inmediatamente
     document.getElementById('modal-mti').style.display = 'none';
     btn.disabled = false;
     btn.textContent = 'Publicar';
     renderMTI();
+
+    // Navegar a Manny te informa y mostrar confirmación
+    var navBtn = document.querySelector('.nav-item[onclick*="noticias"]');
+    showView('noticias', navBtn);
+    renderMTIAll();
+    setTimeout(function() {
+      showToast(editId ? '✓ Publicación actualizada' : '✦ Publicado en Manny te informa', true);
+    }, 200);
   }
 
   function editarMTI(id) { abrirModalMTI(id); }
@@ -2812,16 +2885,26 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
       var badgeLabel = { noticia:'Noticia', video:'Video', podcast:'Podcast' }[item.tipo] || 'Noticia';
       var badgeClass = { noticia:'badge-noticia', video:'badge-video', podcast:'badge-podcast' }[item.tipo] || 'badge-noticia';
       var mediaHTML = '';
-      if ((item.tipo === 'video' || item.tipo === 'podcast') && item.yt) {
-        var embed = getYTEmbed(item.yt);
-        mediaHTML = embed ? '<iframe src="' + embed + '" allowfullscreen></iframe>' : '<div class="media-placeholder"><div class="big-icon">' + (item.tipo==='podcast'?'🎙️':'▶️') + '</div></div>';
+      if (item.tipo === 'video' && item.yt) {
+        var ytId2 = getYTId(item.yt);
+        if (ytId2) {
+          mediaHTML = '<div id="yt-thumb-all-' + item.id + '" style="position:relative;cursor:pointer;width:100%;height:100%" onclick="activarYTAll(\'' + item.id + '\',\'' + ytId2 + '\')">'
+            + '<img src="https://img.youtube.com/vi/' + ytId2 + '/hqdefault.jpg" style="width:100%;height:100%;object-fit:cover;display:block" alt="' + item.titulo + '" />'
+            + '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.25)">'
+            + '<div style="width:60px;height:60px;background:#FF0000;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.4)">'
+            + '<div style="width:0;height:0;border-top:13px solid transparent;border-bottom:13px solid transparent;border-left:22px solid white;margin-left:5px"></div>'
+            + '</div></div></div>';
+        } else { mediaHTML = '<div class="media-placeholder"><div class="big-icon">▶️</div></div>'; }
+      } else if (item.tipo === 'podcast' && item.audio) {
+        mediaHTML = '<div class="media-placeholder" style="background:#111110"><div class="big-icon">🎙️</div></div>';
       } else if (item.img) {
         mediaHTML = '<img src="' + item.img + '" alt="' + item.titulo + '" />';
       } else {
         var icons = { noticia:'📰', video:'▶️', podcast:'🎙️' };
         mediaHTML = '<div class="media-placeholder"><div class="big-icon">' + (icons[item.tipo]||'📰') + '</div></div>';
       }
-      var adminBtns = isAdmin ? '<div class="mti-card-footer"><button class="btn-edit-noticia" onclick="editarMTI(\'' + item.id + '\')">✏️ Editar</button><button class="btn-del-noticia" onclick="eliminarMTI(\'' + item.id + '\')">🗑️</button></div>' : '';
+      var destacarBtn = isAdmin ? '<button class="btn-edit-noticia" style="' + (item.destacar ? 'background:var(--gold-light);border-color:var(--gold);color:var(--gold-dark)' : '') + '" onclick="toggleDestacar(\'' + item.id + '\')" title="' + (item.destacar ? 'Quitar del Dashboard' : 'Destacar en Dashboard') + '">' + (item.destacar ? '⭐ Destacado' : '☆ Dashboard') + '</button>' : '';
+      var adminBtns = isAdmin ? '<div class="mti-card-footer">' + destacarBtn + '<button class="btn-edit-noticia" onclick="editarMTI(\'' + item.id + '\')">✏️ Editar</button><button class="btn-del-noticia" onclick="eliminarMTI(\'' + item.id + '\')">🗑️</button></div>' : '';
       html += '<div class="mti-card"><div class="mti-card-media">' + mediaHTML + '<span class="mti-type-badge ' + badgeClass + '">' + badgeLabel + '</span></div><div class="mti-card-body"><div class="mti-card-date">' + fecha + '</div><div class="mti-card-title">' + item.titulo + '</div>' + (item.texto ? '<div class="mti-card-text">' + item.texto + '</div>' : '') + adminBtns + '</div></div>';
     });
     grid.innerHTML = html;
