@@ -989,6 +989,37 @@
   .fecha-ok { color: var(--success); }
   .fecha-pronto { color: var(--warn); }
 
+
+  /* ── ENTRÉNATE CON MANNY ───────────────────────────────── */
+  .entren-tema-card {
+    background: var(--bg-2); border: 2px solid var(--border); border-radius: 12px;
+    padding: 18px 16px; cursor: pointer; transition: all 0.18s; text-align: center;
+  }
+  .entren-tema-card:hover { border-color: var(--gold); background: var(--gold-light); transform: translateY(-2px); }
+  .entren-tema-card.selected { border-color: var(--gold); background: var(--gold-light); box-shadow: 0 0 0 3px rgba(212,175,55,0.15); }
+  .entren-tema-aleatorio { border-style: dashed; }
+  .entren-tema-icon { font-size: 28px; margin-bottom: 8px; }
+  .entren-tema-codigo { font-family: "DM Mono", monospace; font-size: 11px; font-weight: 700; color: var(--gold-dark); letter-spacing: 1px; margin-bottom: 4px; }
+  .entren-tema-nombre { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .entren-tema-norma { font-size: 10px; color: var(--ink-3); }
+  .entren-msg { display: flex; gap: 10px; align-items: flex-start; }
+  .entren-msg.coach { flex-direction: row; }
+  .entren-msg.user { flex-direction: row-reverse; }
+  .entren-bubble {
+    max-width: 75%; padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.6;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .entren-msg.coach .entren-bubble { background: var(--bg-2); border: 1px solid var(--border); border-radius: 4px 14px 14px 14px; color: var(--ink); }
+  .entren-msg.user .entren-bubble { background: var(--gold); color: #1a1200; border-radius: 14px 4px 14px 14px; font-weight: 500; }
+  .entren-avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .entren-msg.coach .entren-avatar { background: var(--bg-3); border: 1px solid var(--border); }
+  .entren-msg.user .entren-avatar { background: var(--gold-light); border: 1px solid var(--gold); }
+  .entren-typing { display: flex; gap: 4px; align-items: center; padding: 12px 16px; }
+  .entren-typing span { width: 7px; height: 7px; background: var(--ink-3); border-radius: 50%; animation: bounce 1.2s infinite; }
+  .entren-typing span:nth-child(2) { animation-delay: 0.2s; }
+  .entren-typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
 </style>
 </head>
 <body>
@@ -1036,6 +1067,7 @@
     <div class="sidebar-section">
       <div class="sidebar-label">Asistencia IA</div>
       <button class="nav-item" onclick="showView('manny', this)"><span class="nav-icon">✦</span> Manny<span class="nav-count gold">IA</span></button>
+      <button class="nav-item" onclick="showView('entrenamiento', this);initEntrenamiento()"><span class="nav-icon">🎯</span> Entrénate</button>
       <button class="nav-item" onclick="showView('gestor', this);showGestor()"><span class="nav-icon">⚙</span> Gestor</button>
     </div>
     <div class="sidebar-section">
@@ -1698,6 +1730,90 @@
           </div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- ENTRÉNATE CON MANNY -->
+    <div class="view" id="view-entrenamiento">
+      <div class="page-header">
+        <div>
+          <div class="page-title">🎯 Entrénate con Manny</div>
+          <div class="page-sub">Coach SGI · Evaluación basada en procedimientos FMA</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-ghost" id="btn-cambiar-tema" onclick="cambiarTema()" style="display:none">🔀 Cambiar tema</button>
+          <button class="btn-primary" id="btn-iniciar-entrenamiento" onclick="iniciarEntrenamiento()">⚡ Iniciar entrenamiento</button>
+        </div>
+      </div>
+
+      <!-- Estado inicial -->
+      <div id="entrenamiento-inicio">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:28px">
+          <div class="entren-tema-card" onclick="seleccionarTema('PGI-02','Control de Documentos y Registros','ISO 9001 · Cláusula 7.5')" id="tema-PGI-02">
+            <div class="entren-tema-icon">📋</div>
+            <div class="entren-tema-codigo">PGI-02</div>
+            <div class="entren-tema-nombre">Control de Documentos</div>
+            <div class="entren-tema-norma">ISO 9001 · 7.5</div>
+          </div>
+          <div class="entren-tema-card" onclick="seleccionarTema('PGI-03','No Conformidad y Acciones Correctivas','ISO 9001 · Cláusula 10.2')" id="tema-PGI-03">
+            <div class="entren-tema-icon">⚠️</div>
+            <div class="entren-tema-codigo">PGI-03</div>
+            <div class="entren-tema-nombre">No Conformidades</div>
+            <div class="entren-tema-norma">ISO 9001 · 10.2</div>
+          </div>
+          <div class="entren-tema-card" onclick="seleccionarTema('PGI-04','Auditorías Internas','ISO 9001 · Cláusula 9.2')" id="tema-PGI-04">
+            <div class="entren-tema-icon">🔍</div>
+            <div class="entren-tema-codigo">PGI-04</div>
+            <div class="entren-tema-nombre">Auditorías Internas</div>
+            <div class="entren-tema-norma">ISO 9001 · 9.2</div>
+          </div>
+          <div class="entren-tema-card" onclick="seleccionarTema('MIPER','Identificación de Peligros y Evaluación de Riesgos','ISO 45001 · Cláusula 6.1')" id="tema-MIPER">
+            <div class="entren-tema-icon">🦺</div>
+            <div class="entren-tema-codigo">MIPER</div>
+            <div class="entren-tema-nombre">Peligros y Riesgos</div>
+            <div class="entren-tema-norma">ISO 45001 · 6.1</div>
+          </div>
+          <div class="entren-tema-card" onclick="seleccionarTema('PGI-19','Identificación de Aspectos Ambientales','ISO 14001 · Cláusula 6.1')" id="tema-PGI-19">
+            <div class="entren-tema-icon">🌿</div>
+            <div class="entren-tema-codigo">PGI-19</div>
+            <div class="entren-tema-nombre">Aspectos Ambientales</div>
+            <div class="entren-tema-norma">ISO 14001 · 6.1</div>
+          </div>
+          <div class="entren-tema-card entren-tema-aleatorio" onclick="seleccionarTema('ALEATORIO','','')">
+            <div class="entren-tema-icon">🎲</div>
+            <div class="entren-tema-codigo">SORPRESA</div>
+            <div class="entren-tema-nombre">Tema aleatorio</div>
+            <div class="entren-tema-norma">Manny elige</div>
+          </div>
+        </div>
+        <div id="entrenamiento-tema-seleccionado" style="display:none;padding:16px;background:var(--gold-light);border:1px solid var(--gold);border-radius:10px;margin-bottom:20px">
+          <div style="font-size:12px;color:var(--gold-dark);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Tema seleccionado</div>
+          <div style="font-size:15px;font-weight:600;color:var(--ink)" id="entren-tema-label"></div>
+          <div style="font-size:11px;color:var(--ink-3);margin-top:2px" id="entren-norma-label"></div>
+        </div>
+      </div>
+
+      <!-- Chat de entrenamiento -->
+      <div id="entrenamiento-chat" style="display:none">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:12px 16px;background:var(--gold-light);border:1px solid var(--gold);border-radius:10px">
+          <div style="font-size:20px">🎯</div>
+          <div>
+            <div style="font-size:12px;color:var(--gold-dark);font-weight:600;letter-spacing:1px;text-transform:uppercase">Entrenando</div>
+            <div style="font-size:14px;font-weight:600;color:var(--ink)" id="entren-chat-tema"></div>
+          </div>
+          <button class="btn-ghost" style="margin-left:auto;font-size:11px" onclick="reiniciarEntrenamiento()">↩ Cambiar tema</button>
+        </div>
+
+        <div id="entren-messages" style="display:flex;flex-direction:column;gap:16px;min-height:300px;max-height:520px;overflow-y:auto;padding:4px 0;margin-bottom:16px"></div>
+
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <textarea id="entren-input" class="field-textarea" rows="2"
+            placeholder="Escribe tu respuesta aquí..."
+            style="flex:1;resize:none;font-size:14px"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarRespuestaEntrenamiento();}"></textarea>
+          <button class="btn-primary" id="btn-enviar-entren" onclick="enviarRespuestaEntrenamiento()" style="padding:10px 18px;height:fit-content">Responder →</button>
+        </div>
+        <div style="font-size:10px;color:var(--ink-3);margin-top:6px">Enter para responder · Shift+Enter para nueva línea</div>
       </div>
     </div>
 
@@ -3578,6 +3694,155 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     localStorage.setItem('fma_areas', JSON.stringify(gestorAreasLocal));
     cargarGestorAreas();
     showToast('Área eliminada', false);
+  }
+
+
+  // ── ENTRÉNATE CON MANNY ─────────────────────────────────
+  var entrenTema = null;
+  var entrenMessages = [];
+  var entrenCargando = false;
+
+  var ENTREN_TEMAS = [
+    { codigo: 'PGI-02', nombre: 'Control de Documentos y Registros', norma: 'ISO 9001 · Cláusula 7.5' },
+    { codigo: 'PGI-03', nombre: 'No Conformidad y Acciones Correctivas', norma: 'ISO 9001 · Cláusula 10.2' },
+    { codigo: 'PGI-04', nombre: 'Auditorías Internas', norma: 'ISO 9001 · Cláusula 9.2' },
+    { codigo: 'MIPER',  nombre: 'Identificación de Peligros y Evaluación de Riesgos', norma: 'ISO 45001 · Cláusula 6.1' },
+    { codigo: 'PGI-19', nombre: 'Identificación de Aspectos Ambientales', norma: 'ISO 14001 · Cláusula 6.1' },
+  ];
+
+  function initEntrenamiento() {
+    document.getElementById('entrenamiento-inicio').style.display = 'block';
+    document.getElementById('entrenamiento-chat').style.display = 'none';
+    document.getElementById('btn-iniciar-entrenamiento').style.display = 'inline-flex';
+    document.getElementById('btn-cambiar-tema').style.display = 'none';
+  }
+
+  function seleccionarTema(codigo, nombre, norma) {
+    document.querySelectorAll('.entren-tema-card').forEach(function(c) { c.classList.remove('selected'); });
+    if (codigo === 'ALEATORIO') {
+      entrenTema = ENTREN_TEMAS[Math.floor(Math.random() * ENTREN_TEMAS.length)];
+    } else {
+      entrenTema = { codigo: codigo, nombre: nombre, norma: norma };
+      var card = document.getElementById('tema-' + codigo);
+      if (card) card.classList.add('selected');
+    }
+    document.getElementById('entren-tema-label').textContent = entrenTema.codigo + ' — ' + entrenTema.nombre;
+    document.getElementById('entren-norma-label').textContent = entrenTema.norma;
+    document.getElementById('entrenamiento-tema-seleccionado').style.display = 'block';
+  }
+
+  function iniciarEntrenamiento() {
+    if (!entrenTema) {
+      // Seleccionar tema aleatorio si no eligió
+      entrenTema = ENTREN_TEMAS[Math.floor(Math.random() * ENTREN_TEMAS.length)];
+    }
+    document.getElementById('entrenamiento-inicio').style.display = 'none';
+    document.getElementById('entrenamiento-chat').style.display = 'block';
+    document.getElementById('btn-iniciar-entrenamiento').style.display = 'none';
+    document.getElementById('btn-cambiar-tema').style.display = 'inline-flex';
+    document.getElementById('entren-chat-tema').textContent = entrenTema.codigo + ' — ' + entrenTema.nombre;
+    entrenMessages = [];
+    document.getElementById('entren-messages').innerHTML = '';
+    // Enviar trigger de inicio
+    enviarAEntrenamiento('[INICIAR_ENTRENAMIENTO]');
+  }
+
+  function cambiarTema() { reiniciarEntrenamiento(); }
+
+  function reiniciarEntrenamiento() {
+    entrenTema = null;
+    entrenMessages = [];
+    document.getElementById('entren-messages').innerHTML = '';
+    document.getElementById('entrenamiento-inicio').style.display = 'block';
+    document.getElementById('entrenamiento-chat').style.display = 'none';
+    document.getElementById('btn-iniciar-entrenamiento').style.display = 'inline-flex';
+    document.getElementById('btn-cambiar-tema').style.display = 'none';
+    document.getElementById('entrenamiento-tema-seleccionado').style.display = 'none';
+    document.querySelectorAll('.entren-tema-card').forEach(function(c) { c.classList.remove('selected'); });
+  }
+
+  function enviarRespuestaEntrenamiento() {
+    var input = document.getElementById('entren-input');
+    var texto = input.value.trim();
+    if (!texto || entrenCargando) return;
+    input.value = '';
+    agregarMensajeEntren('user', texto);
+    enviarAEntrenamiento(texto);
+  }
+
+  function agregarMensajeEntren(rol, texto) {
+    var container = document.getElementById('entren-messages');
+    var div = document.createElement('div');
+    div.className = 'entren-msg ' + (rol === 'user' ? 'user' : 'coach');
+    var avatar = rol === 'user'
+      ? '<div class="entren-avatar">👤</div>'
+      : '<div class="entren-avatar">🤖</div>';
+    var textoSafe = texto.split('<').join('&lt;').split('>').join('&gt;').split('\n').join('<br>');
+    div.innerHTML = avatar + '<div class="entren-bubble">' + textoSafe + '</div>';
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return div;
+  }
+
+  function mostrarTypingEntren() {
+    var container = document.getElementById('entren-messages');
+    var div = document.createElement('div');
+    div.className = 'entren-msg coach';
+    div.id = 'entren-typing';
+    div.innerHTML = '<div class="entren-avatar">🤖</div><div class="entren-bubble entren-typing"><span></span><span></span><span></span></div>';
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function quitarTypingEntren() {
+    var t = document.getElementById('entren-typing');
+    if (t) t.remove();
+  }
+
+  async function enviarAEntrenamiento(texto) {
+    if (entrenCargando) return;
+    entrenCargando = true;
+    var btn = document.getElementById('btn-enviar-entren');
+    if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+    if (texto !== '[INICIAR_ENTRENAMIENTO]') {
+      entrenMessages.push({ role: 'user', content: texto });
+    } else {
+      entrenMessages.push({ role: 'user', content: texto });
+    }
+
+    mostrarTypingEntren();
+
+    try {
+      var response = await fetch('/api/entrenamiento', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: entrenMessages, tema: entrenTema })
+      });
+      var data = await response.json();
+      quitarTypingEntren();
+
+      if (data.error) throw new Error(data.error);
+
+      entrenMessages.push({ role: 'assistant', content: data.reply });
+      agregarMensajeEntren('coach', data.reply);
+
+      // Actualizar tema si el server lo cambió
+      if (data.tema && !entrenTema) {
+        entrenTema = data.tema;
+        document.getElementById('entren-chat-tema').textContent = entrenTema.codigo + ' — ' + entrenTema.nombre;
+      }
+
+    } catch(e) {
+      quitarTypingEntren();
+      agregarMensajeEntren('coach', '⚠️ Error al conectar con Manny. Intenta nuevamente.');
+      console.error('Entrenamiento error:', e);
+    }
+
+    entrenCargando = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'Responder →'; }
+    var input = document.getElementById('entren-input');
+    if (input) input.focus();
   }
 
 function parseMarkdown(text) {
