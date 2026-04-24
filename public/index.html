@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NormaAI FMA · Gestión de Faltas, Medidas y Acciones</title>
+<title>Manny · Sistema de Gestión FMA Industrial</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -940,6 +940,14 @@
   }
   .conv-item:hover { background: var(--gold-light); border-color: var(--border); }
   .conv-item.active { background: var(--gold-light); border-color: var(--gold); }
+  .conv-item { display: flex; align-items: center; gap: 6px; }
+  .conv-del-btn {
+    opacity: 0; flex-shrink: 0; background: transparent; border: none;
+    color: var(--ink-3); font-size: 11px; cursor: pointer; padding: 2px 5px;
+    border-radius: 4px; transition: all 0.15s; line-height: 1;
+  }
+  .conv-item:hover .conv-del-btn { opacity: 1; }
+  .conv-del-btn:hover { background: var(--danger-bg); color: var(--danger); }
   .conv-item-titulo {
     font-size: 12px; font-weight: 500; color: var(--ink);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -989,7 +997,7 @@
 <div id="password-gate">
   <div class="gate-box">
     <img src="/images/manny.jpeg" alt="Manny" style="width:80px;height:80px;object-fit:cover;object-position:60% 15%;border-radius:50%;border:2px solid var(--gold);margin:0 auto 16px;display:block" onerror="this.style.display='none'" />
-    <div class="gate-brand">NormaAI <span>FMA</span></div>
+    <div class="gate-brand">Manny <span>FMA</span></div>
     <div class="gate-sub">Sistema de Gestión · FMA Industrial SpA</div>
     <input class="gate-input-email" type="email" id="gate-email" placeholder="Correo electrónico" autocomplete="email" />
     <input class="gate-input" type="password" id="gate-input" placeholder="Contraseña" autocomplete="current-password" />
@@ -1006,7 +1014,7 @@
 <div class="topbar">
   <div class="brand">
     <div>
-      <div class="brand-name">NormaAI <span style="color:var(--ink-3);font-size:14px;font-family:'DM Mono',monospace;letter-spacing:2px">FMA</span></div>
+      <div class="brand-name">Manny <span style="color:var(--ink-3);font-size:14px;font-family:'DM Mono',monospace;letter-spacing:2px">FMA</span></div>
       <div class="brand-sub">Faltas · Medidas · Acciones</div>
     </div>
   </div>
@@ -1710,7 +1718,7 @@
         <!-- TAB USUARIOS -->
         <div id="gestor-tab-usuarios">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-            <div style="font-size:13px;color:var(--ink-3)">Gestión de accesos al sistema NormaAI FMA</div>
+            <div style="font-size:13px;color:var(--ink-3)">Gestión de accesos al sistema Manny FMA</div>
             <button class="btn-primary" onclick="abrirModalUsuario()">+ Agregar usuario</button>
           </div>
           <div class="table-wrap"><table>
@@ -2071,7 +2079,7 @@
   }
 
   function buildSystemPrompt(nc) {
-    return `Eres NormaAI FMA, asistente experto en ISO 9001:2015 para análisis de No Conformidades con metodología 5 Porqués.
+    return `Eres Manny, asistente experto en ISO 9001:2015 para análisis de No Conformidades con metodología 5 Porqués.
 
 NC: ${nc.title} · Cláusula ${nc.clause}
 Descripción: ${nc.desc}
@@ -3133,6 +3141,25 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
   var convActualId = null;
   var convActualTitulo = 'Nueva conversación';
 
+  async function eliminarConversacion(id) {
+    if (!confirm('¿Eliminar esta conversación?')) return;
+    try {
+      var sb = getSupabase();
+      await sb.from('mensajes').delete().eq('conversacion_id', id);
+      await sb.from('conversaciones').delete().eq('id', id);
+      if (convActualId === id) {
+        convActualId = null;
+        document.getElementById('chat-messages').innerHTML = '';
+        mensajesActuales = [];
+      }
+      await cargarConversaciones();
+      showToast('Conversación eliminada', false);
+    } catch(e) {
+      console.warn('Error eliminando conversación:', e);
+      showToast('Error al eliminar', false);
+    }
+  }
+
   async function cargarConversaciones() {
     var convList = document.getElementById('conv-list');
     if (!convList) return;
@@ -3158,8 +3185,11 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
         var titulo = conv.titulo || 'Conversación';
         var isActive = conv.id === convActualId ? ' active' : '';
         return '<div class="conv-item' + isActive + '" onclick="abrirConversacion(\'' + conv.id + '\', \'' + titulo.replace(/'/g, ' ') + '\')">' +
+          '<div style="flex:1;min-width:0">' +
           '<div class="conv-item-titulo">' + titulo + '</div>' +
           '<div class="conv-item-fecha">' + fecha + '</div>' +
+          '</div>' +
+          '<button class="conv-del-btn" onclick="event.stopPropagation();eliminarConversacion(\'' + conv.id + '\')" title="Eliminar conversación">✕</button>' +
         '</div>';
       }).join('');
     } catch(e) {
