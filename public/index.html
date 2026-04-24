@@ -3779,9 +3779,9 @@ Máximo 2-3 oraciones. Sé contextual y conciso.`;
     div.className = 'entren-msg ' + (rol === 'user' ? 'user' : 'coach');
     var avatar = rol === 'user'
       ? '<div class="entren-avatar">👤</div>'
-      : '<div class="entren-avatar" style="padding:0;overflow:hidden"><img src="/public/images/manny.jpeg" style="width:100%;height:100%;object-fit:cover;border-radius:50%" /></div>';
-    var textoSafe = texto.split('<').join('&lt;').split('>').join('&gt;').split('\n').join('<br>');
-    div.innerHTML = avatar + '<div class="entren-bubble">' + textoSafe + '</div>';
+      : '<div class="entren-avatar" style="padding:0;overflow:hidden"><img src="/images/manny.jpeg" onerror="this.parentNode.innerHTML=\'🤖\'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" /></div>';
+    var textoHTML = typeof parseMarkdown === 'function' ? parseMarkdown(texto) : texto.split('<').join('&lt;').split('>').join('&gt;').split('\n').join('<br>');
+    div.innerHTML = avatar + '<div class="entren-bubble">' + textoHTML + '</div>';
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
     return div;
